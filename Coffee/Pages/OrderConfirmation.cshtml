@@ -1,0 +1,105 @@
+@page
+@model WebUI.Pages.OrderConfirmationModel
+@{
+    ViewData["Title"] = "Order Confirmation";
+}
+
+<!-- HERO SECTION -->
+<section class="home-slider owl-carousel">
+    <div class="slider-item" style="background-image: url(@Url.Content("~/images/bg_3.jpg"));">
+        <div class="overlay"></div>
+        <div class="container">
+            <div class="row slider-text justify-content-center align-items-center">
+                <div class="col-md-7 col-sm-12 text-center ftco-animate">
+                    <h1 class="mb-3 mt-5 bread">Order Confirmation</h1>
+                    <p class="breadcrumbs">
+                        <span class="mr-2"><a asp-page="/Index">Home</a></span>
+                        <span>Order Confirmation</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ORDER CONFIRMATION SECTION -->
+<section class="ftco-section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8 ftco-animate">
+                <div class="text-center mb-5">
+                    <div class="icon-box">
+                        <span class="icon icon-check_circle" style="font-size: 80px; color: #28a745;"></span>
+                    </div>
+                    <h2 class="mt-4">Thank You For Your Order!</h2>
+                    <p class="lead">Your order has been placed successfully.</p>
+                </div>
+
+                @if (Model.Order != null)
+                {
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h4 class="card-title">Order Details</h4>
+                            <hr>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>Order Code:</strong> <span class="text-primary">@Model.Order.OrderCode</span></p>
+                                    <p><strong>Customer Name:</strong> @Model.Order.CustomerName</p>
+                                    <p><strong>Order Date:</strong> @Model.Order.CreatedDate.ToString("MMMM dd, yyyy hh:mm tt")</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Status:</strong> <span class="badge badge-info">@Model.Order.Status</span></p>
+                                    <p><strong>Total Items:</strong> @Model.Order.TotalItemsAmount</p>
+                                    <p><strong>Total Price:</strong> <strong>@Model.Order.TotalPrice.ToString("C")</strong></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">Order Items</h5>
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Item</th>
+                                            <th>Price</th>
+                                            <th>Quantity</th>
+                                            <th>Subtotal</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var item in Model.Order.Items)
+                                        {
+                                            <tr>
+                                                <td>@item.ItemName</td>
+                                                <td>@item.UnitPrice.ToString("C")</td>
+                                                <td>@item.Quantity</td>
+                                                <td>@((item.UnitPrice * item.Quantity).ToString("C"))</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <h5><i class="icon-info-circle"></i> Important Information</h5>
+                        <p class="mb-0">
+                            We will contact you soon to confirm your order. 
+                            Your personal information (email, phone number, address) will be automatically cleared 
+                            from our system after your order is completed for your privacy and security.
+                        </p>
+                    </div>
+
+                    <div class="text-center mt-4">
+                        <a asp-page="/Index" class="btn btn-primary btn-lg">Continue Shopping</a>
+                        <a asp-page="/Menu" class="btn btn-outline-primary btn-lg ml-2">View Menu</a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</section>

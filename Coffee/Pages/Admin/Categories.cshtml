@@ -1,0 +1,409 @@
+﻿@page
+@model WebUI.Pages.Admin.CategoriesModel
+@{
+    ViewData["Title"] = "Categories";
+}
+
+<!-- MAIN CONTENT -->
+<main id="content" class="content py-10">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div class="">
+                        <h1 class="fs-3 mb-1">Categories</h1>
+                        <p class="mb-0">
+                            Manage your product categories
+                            <span class="badge bg-info ms-2">
+                                <i class="ti ti-hand-grab"></i> Drag to reorder
+                            </span>
+                        </p>
+                    </div>
+                    <div>
+                        <a asp-page="/Admin/CreateCategory" class="btn btn-primary">
+                            <i class="ti ti-plus me-2"></i>Add Category
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(Model.SuccessMessage))
+        {
+            <div class="row">
+                <div class="col-12">
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="ti ti-check me-2"></i>@Model.SuccessMessage
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                </div>
+            </div>
+        }
+
+        @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+        {
+            <div class="row">
+                <div class="col-12">
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="ti ti-alert-circle me-2"></i>@Model.ErrorMessage
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <!-- Search Box -->
+        <div class="row mb-3">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <form method="get" class="row g-3">
+                            <div class="col-md-10">
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="ti ti-search"></i></span>
+                                    <input type="text" 
+                                           name="SearchTerm" 
+                                           value="@Model.SearchTerm" 
+                                           class="form-control" 
+                                           placeholder="Search categories by name..." />
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="ti ti-search me-1"></i>Search
+                                </button>
+                            </div>
+                            @if (!string.IsNullOrEmpty(Model.SearchTerm))
+                            {
+                                <div class="col-12">
+                                    <a asp-page="/Admin/Categories" class="btn btn-sm btn-outline-secondary">
+                                        <i class="ti ti-x me-1"></i>Clear Search
+                                    </a>
+                                    <span class="text-muted ms-2">Found @Model.Categories.TotalCount result(s)</span>
+                                    <span class="badge bg-warning text-dark ms-2">
+                                        <i class="ti ti-alert-triangle me-1"></i>Drag-and-drop disabled during search
+                                    </span>
+                                </div>
+                            }
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                <div class="card table-responsive">
+                    <table class="table mb-0 text-nowrap table-hover">
+                        <thead class="table-light border-light">
+                            <tr>
+                                <th width="50"><i class="ti ti-grip-vertical"></i></th>
+                                <th>ID</th>
+                                <th>Category Name</th>
+                                <th>Created Date</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="categoriesTableBody">
+                            @if (Model.Categories.Items.Any())
+                            {
+                                @foreach (var category in Model.Categories.Items)
+                                {
+                                    <tr class="align-middle category-row" data-category-id="@category.Id" style="cursor: move;">
+                                        <td class="drag-handle">
+                                            <i class="ti ti-grip-vertical text-muted" style="cursor: grab;"></i>
+                                        </td>
+                                        <td>@category.Id</td>
+                                        <td>
+                                            <span class="fw-semibold">@category.Name</span>
+                                        </td>
+                                        <td>@category.CreatedDate.ToString("MMM dd, yyyy")</td>
+                                        <td class="">
+                                            <button type="button" class="btn btn-sm btn-link p-0" 
+                                                    data-bs-toggle="modal" 
+                                                    data-bs-target="#editModal"
+                                                    data-category-id="@category.Id"
+                                                    data-category-name="@category.Name"
+                                                    data-category-version="@category.Version"
+                                                    title="Edit">
+                                                <i class="ti ti-edit"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-link p-0 link-danger ms-2" 
+                                                    onclick="confirmDelete(@category.Id, '@category.Name')"
+                                                    title="Delete">
+                                                <i class="ti ti-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="5" class="text-center py-4 text-muted">
+                                        <i class="ti ti-folder-off fs-1 d-block mb-2"></i>
+                                        @if (!string.IsNullOrEmpty(Model.SearchTerm))
+                                        {
+                                            <text>No categories found matching "@Model.SearchTerm".</text>
+                                        }
+                                        else
+                                        {
+                                            <text>No categories found. Click "Add Category" to create one.</text>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                @if (Model.Categories.TotalPages > 1)
+                {
+                    <div class="card-footer">
+                        <nav aria-label="Category pagination">
+                            <ul class="pagination justify-content-center mb-0">
+                                <li class="page-item @(!Model.Categories.HasPreviousPage ? "disabled" : "")">
+                                    <a class="page-link" 
+                                       asp-page="/Admin/Categories" 
+                                       asp-route-pageNumber="@(Model.Categories.PageNumber - 1)"
+                                       asp-route-searchTerm="@Model.SearchTerm">
+                                        <i class="ti ti-chevron-left"></i>
+                                    </a>
+                                </li>
+
+                                @for (int i = 1; i <= Model.Categories.TotalPages; i++)
+                                {
+                                    <li class="page-item @(i == Model.Categories.PageNumber ? "active" : "")">
+                                        <a class="page-link" 
+                                           asp-page="/Admin/Categories" 
+                                           asp-route-pageNumber="@i"
+                                           asp-route-searchTerm="@Model.SearchTerm">
+                                            @i
+                                        </a>
+                                    </li>
+                                }
+
+                                <li class="page-item @(!Model.Categories.HasNextPage ? "disabled" : "")">
+                                    <a class="page-link" 
+                                       asp-page="/Admin/Categories" 
+                                       asp-route-pageNumber="@(Model.Categories.PageNumber + 1)"
+                                       asp-route-searchTerm="@Model.SearchTerm">
+                                        <i class="ti ti-chevron-right"></i>
+                                    </a>
+                                </li>
+                            </ul>
+                        </nav>
+                        <p class="text-center text-muted small mt-2 mb-0">
+                            Showing @Model.Categories.Items.Count() of @Model.Categories.TotalCount categories (Page @Model.Categories.PageNumber of @Model.Categories.TotalPages)
+                        </p>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                <footer class="text-center py-2 mt-6 text-secondary">
+                    <p class="mb-0">Copyright © @DateTime.Now.Year Coffee Shop Admin Panel</p>
+                </footer>
+            </div>
+        </div>
+    </div>
+</main>
+
+@section Styles {
+    <style>
+        .sortable-ghost {
+            opacity: 0.4;
+            background-color: #f8f9fa;
+        }
+
+        .sortable-drag {
+            opacity: 0.8;
+        }
+
+        .category-row:hover {
+            background-color: #f8f9fa;
+        }
+
+        .drag-handle {
+            cursor: grab;
+            user-select: none;
+        }
+
+        .drag-handle:active {
+            cursor: grabbing;
+        }
+
+        .category-row.sortable-chosen {
+            background-color: #e7f3ff;
+        }
+    </style>
+}
+
+<!-- Edit Modal -->
+<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" asp-page-handler="Edit">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editModalLabel">
+                        <i class="ti ti-edit me-2"></i>Edit Category
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" asp-for="EditCategoryId" id="editCategoryId" />
+                    <input type="hidden" asp-for="EditInput.Version" id="editCategoryVersion" />
+                    <div class="mb-3">
+                        <label asp-for="EditInput.Name" class="form-label fw-semibold">Category Name <span class="text-danger">*</span></label>
+                        <input asp-for="EditInput.Name" id="editCategoryName" class="form-control" placeholder="Enter category name" />
+                        <span asp-validation-for="EditInput.Name" class="text-danger small"></span>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="ti ti-x me-2"></i>Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="ti ti-device-floppy me-2"></i>Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" asp-page-handler="Delete" id="deleteForm">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="deleteModalLabel">
+                        <i class="ti ti-alert-triangle me-2"></i>Delete Category
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="id" id="deleteCategoryId" />
+                    <p class="mb-0">Are you sure you want to delete the category <strong id="deleteCategoryName"></strong>?</p>
+                    <p class="text-muted small mb-0 mt-2">
+                        <i class="ti ti-info-circle me-1"></i>This action cannot be undone. Products using this category may be affected.
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="ti ti-x me-2"></i>Cancel
+                    </button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="ti ti-trash me-2"></i>Delete
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <!-- SortableJS for Drag and Drop -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+
+    <script>
+        // Edit modal functionality
+        const editModal = document.getElementById('editModal');
+        if (editModal) {
+            editModal.addEventListener('show.bs.modal', function (event) {
+                const button = event.relatedTarget;
+                const categoryId = button.getAttribute('data-category-id');
+                const categoryName = button.getAttribute('data-category-name');
+                const categoryVersion = button.getAttribute('data-category-version');
+
+                document.getElementById('editCategoryId').value = categoryId;
+                document.getElementById('editCategoryName').value = categoryName;
+                document.getElementById('editCategoryVersion').value = categoryVersion;
+            });
+        }
+
+        // Delete confirmation functionality
+        function confirmDelete(id, name) {
+            document.getElementById('deleteCategoryId').value = id;
+            document.getElementById('deleteCategoryName').textContent = name;
+
+            const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+            deleteModal.show();
+        }
+
+        // Drag and Drop functionality with SortableJS
+        const tbody = document.getElementById('categoriesTableBody');
+        if (tbody && tbody.querySelectorAll('.category-row').length > 0) {
+            const sortable = new Sortable(tbody, {
+                animation: 150,
+                handle: '.drag-handle',
+                ghostClass: 'sortable-ghost',
+                dragClass: 'sortable-drag',
+                onEnd: async function (evt) {
+                    // Get the new order of category IDs
+                    const rows = tbody.querySelectorAll('.category-row');
+                    const orderedIds = Array.from(rows).map(row => parseInt(row.getAttribute('data-category-id')));
+
+                    console.log('New order:', orderedIds);
+
+                    // Send the new order to the server
+                    try {
+                        const response = await fetch('?handler=Reorder', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                            },
+                            body: JSON.stringify(orderedIds)
+                        });
+
+                        const result = await response.json();
+
+                        if (result.success) {
+                            // Show success message (optional)
+                            console.log('Categories reordered successfully');
+
+                            // You can show a toast notification here if you have one
+                            showToast('success', 'Categories reordered successfully!');
+                        } else {
+                            console.error('Failed to reorder categories:', result.message);
+                            showToast('error', 'Failed to reorder categories');
+                        }
+                    } catch (error) {
+                        console.error('Error reordering categories:', error);
+                        showToast('error', 'An error occurred while reordering');
+                    }
+                }
+            });
+        }
+
+        // Simple toast notification function
+        function showToast(type, message) {
+            const toastContainer = document.createElement('div');
+            toastContainer.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999;';
+
+            const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+            const icon = type === 'success' ? 'ti-check' : 'ti-alert-circle';
+
+            toastContainer.innerHTML = `
+                <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+                    <i class="ti ${icon} me-2"></i>${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            `;
+
+            document.body.appendChild(toastContainer);
+
+            // Auto remove after 3 seconds
+            setTimeout(() => {
+                toastContainer.remove();
+            }, 3000);
+        }
+    </script>
+}

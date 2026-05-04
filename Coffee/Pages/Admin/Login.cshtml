@@ -1,0 +1,94 @@
+﻿@page
+@model WebUI.Pages.Admin.LoginModel
+@{
+    Layout = null;
+    ViewData["Title"] = "Admin Sign In";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>@ViewData["Title"] - Coffee Shop</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="apple-touch-icon" sizes="180x180" href="~/admin_assets/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="~/admin_assets/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="~/admin_assets/images/favicon-16x16.png">
+  <link rel="manifest" href="~/admin_assets/site.webmanifest">
+
+  <script type="module" crossorigin src="~/admin_assets/js/main.js"></script>
+  <link rel="stylesheet" crossorigin href="~/admin_assets/css/main.css">
+</head>
+
+<body>
+
+<div class="container d-flex align-items-center justify-content-center min-vh-100">
+  <div class="card " style="max-width:420px; width:100%;">
+    <div class="card-body p-5">
+      <div class="text-center mb-3">
+        <a asp-page="/Admin/Index" class="mb-4 d-inline-block">
+          <img src="data:image/svg+xml,%3csvg%20width='62'%20height='67'%20viewBox='0%200%2062%20667'%20fill='none'%20xmlns='http://www.w3.org/2000/svg'%3e%3cpath%20d='M30.604%2066.378L0.00805664%2048.1582V35.7825L30.604%2054.0023V66.378Z'%20fill='%23302C4D'/%3e%3cpath%20d='M61.1996%2048.1582L30.604%2066.378V54.0023L61.1996%2035.7825V48.1582Z'%20fill='%23E66239'/%3e%3cpath%20d='M30.5955%200L0%2018.2198V30.5955L30.5955%2012.3757V0Z'%20fill='%23657E92'/%3e%3cpath%20d='M61.191%2018.2198L30.5955%200V12.3757L61.191%2030.5955V18.2198Z'%20fill='%23A3B2BE'/%3e%3cpath%20d='M30.604%2048.8457L0.00805664%2030.6259V18.2498L30.604%2036.47V48.8457Z'%20fill='%23302C4D'/%3e%3cpath%20d='M61.1996%2030.6259L30.604%2048.8457V36.47L61.1996%2018.2498V30.6259Z'%20fill='%23E66239'/%3e%3c/svg%3e" alt="" width="36">
+          <span class="ms-2"> <img src="~/admin_assets/images/logo.svg" alt=""></span>
+        </a>
+        <h1 class="card-title mb-5 h5">Sign in to your account</h1>
+      </div>
+
+      @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+      {
+        <div class="alert alert-danger" role="alert">
+          @Model.ErrorMessage
+        </div>
+      }
+
+      <form id="loginForm" method="post" class="needs-validation" asp-page="/Admin/Login" asp-route-returnUrl="@Model.ReturnUrl" autocomplete="off">
+        <input type="text" name="fake-username" autocomplete="username" class="d-none" tabindex="-1" aria-hidden="true">
+        <input type="password" name="fake-password" autocomplete="new-password" class="d-none" tabindex="-1" aria-hidden="true">
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+        <div class="mb-3">
+          <label asp-for="Input.Username" class="form-label">Username</label>
+          <input asp-for="Input.Username" class="form-control" placeholder="Enter your username" autofocus autocomplete="off" autocapitalize="none" spellcheck="false">
+          <span asp-validation-for="Input.Username" class="text-danger small"></span>
+        </div>
+
+        <div class="mb-3">
+          <label asp-for="Input.Password" class="form-label">Password</label>
+          <input asp-for="Input.Password" type="password" class="form-control" placeholder="Password" autocomplete="new-password">
+          <span asp-validation-for="Input.Password" class="text-danger small"></span>
+        </div>
+
+        <button class="btn btn-primary w-100" type="submit">Sign in</button>
+      </form>
+
+      <div class="text-center mt-3 small text-muted">
+        Don't have an account? <a asp-page="/Index" class="link-primary">Back to Site</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- jQuery (required for validation) -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+<!-- Bootstrap Bundle with Popper -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<partial name="_ValidationScriptsPartial" />
+
+<script>
+  window.addEventListener('pageshow', function (event) {
+    if (!event.persisted) {
+      return;
+    }
+
+    const form = document.getElementById('loginForm');
+    if (form) {
+      form.reset();
+    }
+  });
+</script>
+
+</body>
+
+</html>

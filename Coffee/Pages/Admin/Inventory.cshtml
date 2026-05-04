@@ -1,0 +1,439 @@
+﻿@page
+@model WebUI.Pages.Admin.InventoryModel
+@{
+    ViewData["Title"] = "Inventory";
+}
+<!-- MAIN CONTENT -->
+<main id="content" class="content py-10">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div class="">
+                        <h1 class="fs-3 mb-1">Inventory</h1>
+                        <p class="mb-0">Manage your product inventory</p>
+                    </div>
+                    <div>
+                        <a asp-page="/Admin/CreateItem" class="btn btn-primary">
+                            <i class="ti ti-plus me-2"></i>Add Product
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(Model.SuccessMessage))
+        {
+            <div class="row">
+                <div class="col-12">
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="ti ti-check me-2"></i>@Model.SuccessMessage
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                </div>
+            </div>
+        }
+
+        @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+        {
+            <div class="row">
+                <div class="col-12">
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="ti ti-alert-circle me-2"></i>@Model.ErrorMessage
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <!-- Search Box -->
+        <div class="row mb-3">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <form method="get" class="row g-3">
+                            <div class="col-md-10">
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="ti ti-search"></i></span>
+                                    <input type="text" 
+                                           name="SearchTerm" 
+                                           value="@Model.SearchTerm" 
+                                           class="form-control" 
+                                           placeholder="Search by name, description, or category..." />
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="ti ti-search me-1"></i>Search
+                                </button>
+                            </div>
+                            @if (!string.IsNullOrEmpty(Model.SearchTerm))
+                            {
+                                <div class="col-12">
+                                    <a asp-page="/Admin/Inventory" class="btn btn-sm btn-outline-secondary">
+                                        <i class="ti ti-x me-1"></i>Clear Search
+                                    </a>
+                                    <span class="text-muted ms-2">Found @Model.Items.TotalCount result(s)</span>
+                                </div>
+                            }
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                <div class="card table-responsive">
+                    <table class="table mb-0 text-nowrap table-hover">
+                        <thead class="table-light border-light">
+                            <tr>
+                                <th>Image</th>
+                                <th>Name</th>
+                                <th>Category</th>
+                                <th>Price</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.Items.Items.Any())
+                            {
+                                @foreach (var item in Model.Items.Items)
+                                {
+                                    <tr class="align-middle" id="item-row-@item.Id">
+                                        <td>
+                                            @if (!string.IsNullOrEmpty(item.ImageUrl))
+                                            {
+                                                <img src="@item.ImageUrl" alt="@item.Name" class="avatar avatar-md rounded" />
+                                            }
+                                            else
+                                            {
+                                                <div class="avatar avatar-md rounded bg-light d-flex align-items-center justify-content-center">
+                                                    <i class="ti ti-photo text-muted"></i>
+                                                </div>
+                                            }
+                                        </td>
+                                        <td>
+                                            <a asp-page="/Admin/ItemDetail" asp-route-id="@item.Id" class="text-decoration-none">
+                                                <span class="fw-semibold">@item.Name</span>
+                                            </a>
+                                        </td>
+                                        <td>@item.CategoryName</td>
+                                        <td>$@item.Price.ToString("F2")</td>
+                                        <td>
+                                            <span class="badge @(item.IsActive ? "bg-success" : "bg-secondary")" id="status-badge-@item.Id">
+                                                @(item.IsActive ? "Active" : "Inactive")
+                                            </span>
+                                        </td>
+                                        <td class="">
+                                            <a asp-page="/Admin/ItemDetail" asp-route-id="@item.Id" class="btn btn-sm btn-link p-0" title="View Details">
+                                                <i class="ti ti-eye"></i>
+                                            </a>
+                                            <button type="button" class="btn btn-sm btn-link p-0 ms-2"
+                                                    onclick="toggleItemStatus(@item.Id, @item.IsActive.ToString().ToLower())"
+                                                    title="@(item.IsActive ? "Deactivate" : "Activate")">
+                                                <i class="ti ti-power @(item.IsActive ? "text-warning" : "text-success")"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-link p-0 link-danger ms-2"
+                                                    onclick="confirmDelete(@item.Id, '@item.Name')"
+                                                    title="Delete">
+                                                <i class="ti ti-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="6" class="text-center py-4 text-muted">
+                                        <i class="ti ti-package-off fs-1 d-block mb-2"></i>
+                                        @if (!string.IsNullOrEmpty(Model.SearchTerm))
+                                        {
+                                            <text>No items found matching "@Model.SearchTerm".</text>
+                                        }
+                                        else
+                                        {
+                                            <text>No items found. Click "Add Product" to create one.</text>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                @if (Model.Items.TotalPages > 1)
+                {
+                    <div class="card-footer">
+                        <nav aria-label="Inventory pagination">
+                            <ul class="pagination justify-content-center mb-0">
+                                <li class="page-item @(!Model.Items.HasPreviousPage ? "disabled" : "")">
+                                    <a class="page-link" 
+                                       asp-page="/Admin/Inventory" 
+                                       asp-route-pageNumber="@(Model.Items.PageNumber - 1)"
+                                       asp-route-searchTerm="@Model.SearchTerm">
+                                        <i class="ti ti-chevron-left"></i>
+                                    </a>
+                                </li>
+
+                                @for (int i = 1; i <= Model.Items.TotalPages; i++)
+                                {
+                                    <li class="page-item @(i == Model.Items.PageNumber ? "active" : "")">
+                                        <a class="page-link" 
+                                           asp-page="/Admin/Inventory" 
+                                           asp-route-pageNumber="@i"
+                                           asp-route-searchTerm="@Model.SearchTerm">
+                                            @i
+                                        </a>
+                                    </li>
+                                }
+
+                                <li class="page-item @(!Model.Items.HasNextPage ? "disabled" : "")">
+                                    <a class="page-link" 
+                                       asp-page="/Admin/Inventory" 
+                                       asp-route-pageNumber="@(Model.Items.PageNumber + 1)"
+                                       asp-route-searchTerm="@Model.SearchTerm">
+                                        <i class="ti ti-chevron-right"></i>
+                                    </a>
+                                </li>
+                            </ul>
+                        </nav>
+                        <p class="text-center text-muted small mt-2 mb-0">
+                            Showing @Model.Items.Items.Count() of @Model.Items.TotalCount items (Page @Model.Items.PageNumber of @Model.Items.TotalPages)
+                        </p>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                <footer class="text-center py-2 mt-6 text-secondary">
+                    <p class="mb-0">Copyright © @DateTime.Now.Year Coffee Shop Admin Panel</p>
+                </footer>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Edit Modal -->
+<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form method="post" asp-page-handler="Edit" enctype="multipart/form-data">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editModalLabel">
+                        <i class="ti ti-edit me-2"></i>Edit Item
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" asp-for="EditItemId" id="editItemId" />
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Current Image</label>
+                        <div id="currentImageContainer">
+                            <img id="currentImage" src="" alt="Current" class="img-thumbnail" style="max-height: 150px;" />
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="EditImageFile" class="form-label fw-semibold">Change Image</label>
+                        <input asp-for="EditImageFile" type="file" class="form-control" accept="image/*" />
+                        <small class="text-muted">Leave empty to keep current image</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="EditInput.Name" class="form-label fw-semibold">Name <span class="text-danger">*</span></label>
+                        <input asp-for="EditInput.Name" id="editName" class="form-control" placeholder="Enter item name" />
+                        <span asp-validation-for="EditInput.Name" class="text-danger small"></span>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="EditInput.Price" class="form-label fw-semibold">Price <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input asp-for="EditInput.Price" id="editPrice" type="number" step="0.01" class="form-control" placeholder="0.00" />
+                            </div>
+                            <span asp-validation-for="EditInput.Price" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="EditInput.CategoryId" class="form-label fw-semibold">Category <span class="text-danger">*</span></label>
+                            <select asp-for="EditInput.CategoryId" id="editCategory" asp-items="Model.Categories" class="form-select">
+                                <option value="">-- Select Category --</option>
+                            </select>
+                            <span asp-validation-for="EditInput.CategoryId" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="EditInput.Description" class="form-label fw-semibold">Description</label>
+                        <textarea asp-for="EditInput.Description" id="editDescription" class="form-control" rows="3" placeholder="Enter description"></textarea>
+                        <span asp-validation-for="EditInput.Description" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input asp-for="EditInput.IsActive" id="editIsActive" class="form-check-input" type="checkbox" />
+                            <label asp-for="EditInput.IsActive" class="form-check-label">Active</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="ti ti-x me-2"></i>Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="ti ti-device-floppy me-2"></i>Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" asp-page-handler="Delete">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="deleteModalLabel">
+                        <i class="ti ti-alert-triangle me-2"></i>Delete Item
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="id" id="deleteItemId" />
+                    <p class="mb-0">Are you sure you want to delete the item <strong id="deleteItemName"></strong>?</p>
+                    <p class="text-muted small mb-0 mt-2">
+                        <i class="ti ti-info-circle me-1"></i>This action cannot be undone.
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="ti ti-x me-2"></i>Cancel
+                    </button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="ti ti-trash me-2"></i>Delete
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        // Edit modal functionality
+        const editModal = document.getElementById('editModal');
+        if (editModal) {
+            editModal.addEventListener('show.bs.modal', function (event) {
+                const button = event.relatedTarget;
+                const itemId = button.getAttribute('data-item-id');
+                const name = button.getAttribute('data-item-name');
+                const price = button.getAttribute('data-item-price');
+                const categoryId = button.getAttribute('data-item-category-id');
+                const description = button.getAttribute('data-item-description');
+                const isActive = button.getAttribute('data-item-active') === 'true';
+                const imageUrl = button.getAttribute('data-item-image');
+
+                document.getElementById('editItemId').value = itemId;
+                document.getElementById('editName').value = name;
+                document.getElementById('editPrice').value = price;
+                document.getElementById('editDescription').value = description;
+                document.getElementById('editIsActive').checked = isActive;
+                document.getElementById('editCategory').value = categoryId;
+
+                // Show current image
+                const currentImage = document.getElementById('currentImage');
+                const currentImageContainer = document.getElementById('currentImageContainer');
+                if (imageUrl && imageUrl !== '') {
+                    currentImage.src = imageUrl;
+                    currentImageContainer.style.display = 'block';
+                } else {
+                    currentImageContainer.style.display = 'none';
+                }
+            });
+        }
+
+        // Delete confirmation functionality
+        function confirmDelete(id, name) {
+            document.getElementById('deleteItemId').value = id;
+            document.getElementById('deleteItemName').textContent = name;
+
+            const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+            deleteModal.show();
+        }
+
+        // Toggle item status (activate/deactivate)
+        async function toggleItemStatus(itemId, isActive) {
+            const action = isActive ? 'deactivate' : 'activate';
+            if (!confirm(`Are you sure you want to ${action} this item?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch('?handler=ToggleStatus&id=' + itemId, {
+                    method: 'POST',
+                    headers: {
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    }
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    const badge = document.getElementById(`status-badge-${itemId}`);
+                    if (result.isActive) {
+                        badge.classList.remove('bg-secondary');
+                        badge.classList.add('bg-success');
+                        badge.textContent = 'Active';
+                    } else {
+                        badge.classList.remove('bg-success');
+                        badge.classList.add('bg-secondary');
+                        badge.textContent = 'Inactive';
+                    }
+
+                    showToast('success', result.message);
+
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showToast('error', result.message || 'Failed to update item status');
+                }
+            } catch (error) {
+                console.error('Error toggling item status:', error);
+                showToast('error', 'An error occurred while updating item status');
+            }
+        }
+
+        // Toast notification
+        function showToast(type, message) {
+            const toastContainer = document.createElement('div');
+            toastContainer.style.cssText = 'position: fixed: top: 20px; right: 20px; z-index: 9999;';
+
+            const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+            const icon = type === 'success' ? 'ti-check' : 'ti-alert-circle';
+
+            toastContainer.innerHTML = `
+                <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+                    <i class="ti ${icon} me-2"></i>${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            `;
+
+            document.body.appendChild(toastContainer);
+
+            setTimeout(() => {
+                toastContainer.remove();
+            }, 3000);
+        }
+    </script>
+}

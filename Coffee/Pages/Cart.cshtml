@@ -1,0 +1,226 @@
+﻿@page
+@model WebUI.Pages.CartModel
+@{
+    ViewData["Title"] = "Shopping Cart";
+}
+
+<!-- Hidden form for antiforgery token -->
+<form id="antiforgeryForm" style="display:none;">
+    @Html.AntiForgeryToken()
+</form>
+
+<!-- HERO SECTION -->
+<section class="home-slider owl-carousel">
+    <div class="slider-item" style="background-image: url(@Url.Content("~/images/bg_3.jpg"));" data-stellar-background-ratio="0.5">
+        <div class="overlay"></div>
+        <div class="container">
+            <div class="row slider-text justify-content-center align-items-center">
+                <div class="col-md-7 col-sm-12 text-center ftco-animate">
+                    <h1 class="mb-3 mt-5 bread">Cart</h1>
+                    <p class="breadcrumbs">
+                        <span class="mr-2"><a asp-page="/Index">Home</a></span>
+                        <span>Cart</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CART SECTION -->
+<section class="ftco-section ftco-cart">
+    <div class="container">
+        @if (Model.CartItems.Any())
+        {
+            <div class="row">
+                <div class="col-md-12 ftco-animate">
+                    <div class="cart-list">
+                        <table class="table">
+                            <thead class="thead-primary">
+                                <tr class="text-center">
+                                    <th>&nbsp;</th>
+                                    <th>&nbsp;</th>
+                                    <th>Product</th>
+                                    <th>Price</th>
+                                    <th>Quantity</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model.CartItems)
+                                {
+                                    <tr class="text-center">
+                                        <td class="product-remove">
+                                            <form method="post" asp-page-handler="RemoveItem" style="display:inline;">
+                                                <input type="hidden" name="itemId" value="@item.ItemId" />
+                                                <button type="submit" class="btn btn-link text-danger">
+                                                    <span class="icon-close"></span>
+                                                </button>
+                                            </form>
+                                        </td>
+
+                                        <td class="image-prod">
+                                            <div class="img" style="background-image:url(@item.ImageUrl);"></div>
+                                        </td>
+
+                                        <td class="product-name">
+                                            <h3>@item.Name</h3>
+                                            <p>@(item.Description?.Length > 80 ? item.Description.Substring(0, 80) + "..." : item.Description)</p>
+                                        </td>
+
+                                        <td class="price">@item.Price.ToString("C")</td>
+
+                                        <td class="quantity">
+                                            <form method="post" asp-page-handler="UpdateQuantity">
+                                                <input type="hidden" name="itemId" value="@item.ItemId" />
+                                                <div class="input-group mb-3">
+                                                    <input type="number"
+                                                           name="quantity"
+                                                           class="quantity form-control input-number"
+                                                           value="@item.Quantity"
+                                                           min="0"
+                                                           max="100"
+                                                           onchange="this.form.submit()" />
+                                                </div>
+                                            </form>
+                                        </td>
+
+                                        <td class="total">@item.LineTotal.ToString("C")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row justify-content-end">
+                <div class="col col-lg-3 col-md-6 mt-5 cart-wrap ftco-animate">
+                    <div class="cart-total mb-3">
+                        <h3>Cart Totals</h3>
+                        <p class="d-flex">
+                            <span>Subtotal</span>
+                            <span>@Model.Subtotal.ToString("C")</span>
+                        </p>
+                        <p class="d-flex">
+                            <span>Delivery</span>
+                            <span>@Model.DeliveryFee.ToString("C")</span>
+                        </p>
+                        <p class="d-flex">
+                            <span>Discount</span>
+                            <span>@Model.Discount.ToString("C")</span>
+                        </p>
+                        <hr>
+                        <p class="d-flex total-price">
+                            <span>Total</span>
+                            <span>@Model.Total.ToString("C")</span>
+                        </p>
+                    </div>
+                    <p class="text-center">
+                        <a asp-page="/Checkout" class="btn btn-primary py-3 px-4">Proceed to Checkout</a>
+                    </p>
+                    <p class="text-center">
+                        <form method="post" asp-page-handler="ClearCart">
+                            <button type="submit" class="btn btn-primary py-3 px-4" style="color: #000 !important;">Clear Cart</button>
+                        </form>
+                    </p>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="row">
+                <div class="col-md-12 text-center ftco-animate">
+                    <div class="alert alert-info">
+                        <h4>Your cart is empty</h4>
+                        <p>Start adding some delicious items to your cart!</p>
+                        <a asp-page="/Menu" class="btn btn-primary mt-3">Browse Menu</a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</section>
+
+<!-- RELATED PRODUCTS SECTION -->
+<section class="ftco-section">
+    <div class="container">
+        <div class="row justify-content-center mb-5 pb-3">
+            <div class="col-md-7 heading-section ftco-animate text-center">
+                <span class="subheading">Discover</span>
+                <h2 class="mb-4">You may also like</h2>
+                <p>Check out these popular items from our menu</p>
+            </div>
+        </div>
+        <div class="row">
+            @foreach (var product in Model.RelatedProducts)
+            {
+                <div class="col-md-3">
+                    <div class="menu-entry">
+                        <a asp-page="/Items/Details" asp-route-id="@product.Id" 
+                           class="img" 
+                           style="background-image: url(@product.ImageUrl);"></a>
+                        <div class="text text-center pt-4">
+                            <h3><a asp-page="/Items/Details" asp-route-id="@product.Id">@product.Name</a></h3>
+                            <p>@(product.Description?.Length > 60 ? product.Description.Substring(0, 60) + "..." : product.Description)</p>
+                            <p class="price"><span>@product.Price.ToString("C")</span></p>
+                            <p>
+                                <button type="button" 
+                                        class="btn btn-primary btn-outline-primary" 
+                                        onclick="addToCart(@product.Id)">
+                                    Add to Cart
+                                </button>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        async function addToCart(itemId) {
+            try {
+                const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+
+                const formData = new FormData();
+                formData.append('itemId', itemId);
+                formData.append('quantity', 1);
+                if (token) {
+                    formData.append('__RequestVerificationToken', token);
+                }
+
+                const response = await fetch('/Cart?handler=AddToCart', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to add item to cart');
+                }
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // Update cart count in header
+                    const cartCountElements = document.querySelectorAll('.cart-count, #cart-count');
+                    cartCountElements.forEach(element => {
+                        element.textContent = result.itemCount;
+                    });
+
+                    // Show success message and reload to update cart display
+                    alert('Item added to cart!');
+                    location.reload();
+                } else {
+                    alert(result.message || 'Failed to add item to cart');
+                }
+            } catch (error) {
+                console.error('Error adding item to cart:', error);
+                alert('An error occurred. Please try again.');
+            }
+        }
+    </script>
+}
+

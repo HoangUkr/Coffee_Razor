@@ -1,0 +1,127 @@
+﻿@page
+@model WebUI.Pages.MenuModel
+@{
+    ViewData["Title"] = "Menu";
+}
+
+<!-- HERO SECTION -->
+<section class="home-slider owl-carousel">
+    <div class="slider-item" style="background-image: url(@Url.Content("~/images/bg_3.jpg"));" data-stellar-background-ratio="0.5">
+        <div class="overlay"></div>
+        <div class="container">
+            <div class="row slider-text justify-content-center align-items-center">
+                <div class="col-md-7 col-sm-12 text-center ftco-animate">
+                    <h1 class="mb-3 mt-5 bread">Order Online</h1>
+                    <p class="breadcrumbs">
+                        <span class="mr-2"><a asp-page="/Index">Home</a></span>
+                        <span>Menu</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- MENU SECTION -->
+<section class="ftco-menu mb-5 pb-5">
+    <div class="container">
+        <div class="row d-md-flex">
+            <div class="col-lg-12 ftco-animate p-md-5">
+                <div class="row">
+                    <!-- CATEGORY TABS -->
+                    <div class="col-md-12 nav-link-wrap mb-5">
+                        <div class="nav ftco-animate nav-pills justify-content-center" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+                            @for (int i = 0; i < Model.Categories.Count; i++)
+                            {
+                                var category = Model.Categories[i];
+                                <a class="nav-link @(i == 0 ? "active" : "")" 
+                                   id="v-pills-@i-tab" 
+                                   data-toggle="pill" 
+                                   href="#v-pills-@i" 
+                                   role="tab" 
+                                   aria-controls="v-pills-@i" 
+                                   aria-selected="@(i == 0 ? "true" : "false")">
+                                    @category.Name
+                                </a>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- TAB CONTENT -->
+                    <div class="col-md-12 d-flex align-items-center">
+                        <div class="tab-content ftco-animate w-100" id="v-pills-tabContent">
+                            @for (int i = 0; i < Model.Categories.Count; i++)
+                            {
+                                var category = Model.Categories[i];
+                                var categoryItems = Model.ItemsByCategory.ContainsKey(category.Id) 
+                                    ? Model.ItemsByCategory[category.Id] 
+                                    : new List<Application.DTOs.Item.ItemResponse>();
+
+                                <div class="tab-pane fade @(i == 0 ? "show active" : "")" 
+                                     id="v-pills-@i" 
+                                     role="tabpanel" 
+                                     aria-labelledby="v-pills-@i-tab">
+                                    <div class="row">
+                                        @if (categoryItems.Any())
+                                        {
+                                            @foreach (var item in categoryItems)
+                                            {
+                                                <div class="col-md-3 mb-4">
+                                                    <div class="menu-entry">
+                                                        <a asp-page="/Items/Details" 
+                                                           asp-route-id="@item.Id" 
+                                                           class="img" 
+                                                           style="background-image: url(@(string.IsNullOrEmpty(item.ImageUrl) ? Url.Content("~/images/menu-1.jpg") : Url.Content(item.ImageUrl)));"></a>
+                                                        <div class="text text-center pt-4">
+                                                            <h3><a asp-page="/Items/Details" asp-route-id="@item.Id">@item.Name</a></h3>
+                                                            <p>@(item.Description?.Length > 80 ? item.Description.Substring(0, 80) + "..." : item.Description)</p>
+                                                            <p class="price"><span>@item.Price.ToString("C")</span></p>
+                                                            <p>
+                                                                <button type="button" 
+                                                                        class="btn btn-primary btn-outline-primary" 
+                                                                        onclick="addToCart(@item.Id)">
+                                                                    Add to Cart
+                                                                </button>
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <div class="col-md-12 text-center">
+                                                <p class="text-muted">No items available in this category.</p>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        function addToCart(itemId) {
+            // TODO: Implement add to cart functionality
+            console.log('Adding item ' + itemId + ' to cart');
+            
+            // You can make an AJAX call to add to cart
+            // fetch('/api/cart/add', {
+            //     method: 'POST',
+            //     headers: { 'Content-Type': 'application/json' },
+            //     body: JSON.stringify({ itemId: itemId, quantity: 1 })
+            // })
+            // .then(response => response.json())
+            // .then(data => {
+            //     // Update cart count
+            //     document.getElementById('cart-count').textContent = data.itemCount;
+            // });
+        }
+    </script>
+}

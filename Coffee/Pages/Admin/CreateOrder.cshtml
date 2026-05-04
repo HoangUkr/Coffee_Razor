@@ -1,0 +1,463 @@
+@page
+@model WebUI.Pages.Admin.CreateOrderModel
+@using Domain.Enums
+@using System.Globalization
+@{
+    ViewData["Title"] = "Create Order";
+}
+
+<!-- MAIN CONTENT -->
+<main id="content" class="content py-10">
+    <div class="container-fluid">
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb">
+                                <li class="breadcrumb-item"><a asp-page="/Admin/Orders">Orders</a></li>
+                                <li class="breadcrumb-item active" aria-current="page">Create Order</li>
+                            </ol>
+                        </nav>
+                        <h1 class="fs-3 mb-1">Create New Order</h1>
+                        <p class="mb-0 text-muted">Manually create an order for a customer</p>
+                    </div>
+                    <div>
+                        <a asp-page="/Admin/Orders" class="btn btn-outline-secondary">
+                            <i class="ti ti-arrow-left me-2"></i>Back to Orders
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+        {
+            <div class="row">
+                <div class="col-12">
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="ti ti-alert-circle me-2"></i>@Model.ErrorMessage
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <form method="post">
+            <div class="row">
+                <!-- Customer Information -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Customer Information</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label asp-for="Input.FirstName" class="form-label">First Name <span class="text-danger">*</span></label>
+                                    <input asp-for="Input.FirstName" class="form-control" required />
+                                    <span asp-validation-for="Input.FirstName" class="text-danger"></span>
+                                </div>
+                                <div class="col-md-6">
+                                    <label asp-for="Input.LastName" class="form-label">Last Name <span class="text-danger">*</span></label>
+                                    <input asp-for="Input.LastName" class="form-control" required />
+                                    <span asp-validation-for="Input.LastName" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label asp-for="Input.Email" class="form-label">Email</label>
+                                <input asp-for="Input.Email" type="email" class="form-control" />
+                                <span asp-validation-for="Input.Email" class="text-danger"></span>
+                            </div>
+                            <div class="mb-3">
+                                <label asp-for="Input.PhoneNumber" class="form-label">Phone Number</label>
+                                <input asp-for="Input.PhoneNumber" type="tel" class="form-control" />
+                                <span asp-validation-for="Input.PhoneNumber" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Delivery Information -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Delivery Information</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label">Fulfillment Scope <span class="text-danger">*</span></label>
+                                <div class="form-check">
+                                    <input class="form-check-input"
+                                           type="radio"
+                                           asp-for="Input.FulfillmentScope"
+                                           value="@((int)OrderFulfillmentScope.InHouse)"
+                                           id="fulfillmentScopeInHouse"
+                                           checked="@(Model.Input.FulfillmentScope == OrderFulfillmentScope.InHouse)"
+                                           onchange="toggleFulfillmentFields()" />
+                                    <label class="form-check-label" for="fulfillmentScopeInHouse">
+                                        <i class="ti ti-home me-2"></i>In House
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input"
+                                           type="radio"
+                                           asp-for="Input.FulfillmentScope"
+                                           value="@((int)OrderFulfillmentScope.OutHouse)"
+                                           id="fulfillmentScopeOutHouse"
+                                           checked="@(Model.Input.FulfillmentScope == OrderFulfillmentScope.OutHouse)"
+                                           onchange="toggleFulfillmentFields()" />
+                                    <label class="form-check-label" for="fulfillmentScopeOutHouse">
+                                        <i class="ti ti-shopping-bag me-2"></i>Out House
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="mb-3" id="outHouseFulfillmentSection" style="display: @(Model.Input.FulfillmentScope == OrderFulfillmentScope.OutHouse ? "block" : "none");">
+                                <label class="form-label">Out-House Fulfillment Type <span class="text-danger">*</span></label>
+                                <div class="form-check">
+                                    <input class="form-check-input"
+                                           type="radio"
+                                           asp-for="Input.OutHouseFulfillmentType"
+                                           value="@((int)OutHouseFulfillmentType.Pickup)"
+                                           id="outHouseFulfillmentPickup"
+                                           checked="@(Model.Input.OutHouseFulfillmentType == OutHouseFulfillmentType.Pickup)"
+                                           onchange="toggleFulfillmentFields()" />
+                                    <label class="form-check-label" for="outHouseFulfillmentPickup">
+                                        <i class="ti ti-building-store me-2"></i>Pickup
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input"
+                                           type="radio"
+                                           asp-for="Input.OutHouseFulfillmentType"
+                                           value="@((int)OutHouseFulfillmentType.Delivery)"
+                                           id="outHouseFulfillmentDelivery"
+                                           checked="@(Model.Input.OutHouseFulfillmentType == OutHouseFulfillmentType.Delivery)"
+                                           onchange="toggleFulfillmentFields()" />
+                                    <label class="form-check-label" for="outHouseFulfillmentDelivery">
+                                        <i class="ti ti-truck-delivery me-2"></i>Delivery
+                                    </label>
+                                </div>
+                                <span asp-validation-for="Input.OutHouseFulfillmentType" class="text-danger"></span>
+                            </div>
+
+                            <div class="mb-3" id="addressField" style="display: @(Model.Input.FulfillmentScope == OrderFulfillmentScope.OutHouse && Model.Input.OutHouseFulfillmentType == OutHouseFulfillmentType.Delivery ? "block" : "none");">
+                                <label asp-for="Input.DeliveryAddress" class="form-label">
+                                    Delivery Address <span class="text-danger" id="addressRequired">*</span>
+                                </label>
+                                <textarea asp-for="Input.DeliveryAddress" class="form-control" rows="3"></textarea>
+                                <span asp-validation-for="Input.DeliveryAddress" class="text-danger"></span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="Input.Notes" class="form-label">Order Notes</label>
+                                <textarea asp-for="Input.Notes" class="form-control" rows="3" placeholder="Special instructions..."></textarea>
+                                <span asp-validation-for="Input.Notes" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Items -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Order Items <span class="text-danger">*</span></h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted small mb-3">Search by item name, filter by category, and use the + button to add items to the order.</p>
+
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-6">
+                                    <label for="itemSearch" class="form-label">Search item</label>
+                                    <input type="text" id="itemSearch" class="form-control" placeholder="Type item name..." />
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="categoryFilter" class="form-label">Category</label>
+                                    <select id="categoryFilter" class="form-select">
+                                        <option value="">All categories</option>
+                                        @foreach (var category in Model.AvailableCategories)
+                                        {
+                                            <option value="@category.Id">@category.Name</option>
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-7 mb-4 mb-lg-0">
+                                    <div class="table-responsive border rounded">
+                                        <table class="table table-hover align-middle mb-0">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>Item</th>
+                                                    <th>Category</th>
+                                                    <th class="text-end">Price</th>
+                                                    <th class="text-center" style="width: 90px;">Add</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @for (int i = 0; i < Model.Input.Items.Count; i++)
+                                                {
+                                                    var availableItem = Model.AvailableItems.FirstOrDefault(item => item.Id == Model.Input.Items[i].ItemId);
+                                                    if (availableItem == null)
+                                                    {
+                                                        continue;
+                                                    }
+
+                                                    <tr class="catalog-item"
+                                                        data-item-name="@availableItem.Name.ToLowerInvariant()"
+                                                        data-category-id="@availableItem.CategoryId">
+                                                        <td>
+                                                            <div class="fw-semibold">@availableItem.Name</div>
+                                                            <div class="text-muted small">@(string.IsNullOrWhiteSpace(availableItem.Description) ? "No description" : availableItem.Description)</div>
+                                                            <input type="hidden" asp-for="Input.Items[i].ItemId" />
+                                                            <input type="hidden" asp-for="Input.Items[i].ItemName" />
+                                                            <input type="hidden" asp-for="Input.Items[i].UnitPrice" class="item-unit-price" data-item-id="@Model.Input.Items[i].ItemId" />
+                                                        </td>
+                                                        <td>@availableItem.CategoryName</td>
+                                                        <td class="text-end">@Model.FormatCurrency(availableItem.Price)</td>
+                                                        <td class="text-center">
+                                                            <button type="button"
+                                                                    class="btn btn-sm btn-outline-primary add-item-btn"
+                                                                    data-item-id="@Model.Input.Items[i].ItemId"
+                                                                    title="Add item">
+                                                                <i class="ti ti-plus"></i>
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-5">
+                                    <div class="border rounded p-3 bg-light">
+                                        <div class="d-flex justify-content-between align-items-center mb-3">
+                                            <h6 class="mb-0">Selected Items</h6>
+                                            <span class="badge bg-primary" id="selectedItemsCount">0</span>
+                                        </div>
+
+                                        <div id="selectedItemsEmptyState" class="text-muted small py-3 text-center">
+                                            No items added yet.
+                                        </div>
+
+                                        <div class="table-responsive">
+                                            <table class="table align-middle mb-0">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Item</th>
+                                                        <th class="text-center">Qty</th>
+                                                        <th class="text-end">Total</th>
+                                                        <th></th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @for (int i = 0; i < Model.Input.Items.Count; i++)
+                                                    {
+                                                        <tr class="selected-item-row" data-item-id="@Model.Input.Items[i].ItemId" style="display: none;">
+                                                            <td>
+                                                                <div class="fw-semibold">@Model.Input.Items[i].ItemName</div>
+                                                                <div class="text-muted small">@Model.FormatCurrency(Model.Input.Items[i].UnitPrice) each</div>
+                                                            </td>
+                                                            <td>
+                                                                <div class="input-group input-group-sm quantity-editor mx-auto" style="max-width: 130px;">
+                                                                    <button type="button" class="btn btn-outline-secondary decrease-item-btn" data-item-id="@Model.Input.Items[i].ItemId">-</button>
+                                                                    <input type="number"
+                                                                           asp-for="Input.Items[i].Quantity"
+                                                                           class="form-control text-center item-quantity-input"
+                                                                           data-item-id="@Model.Input.Items[i].ItemId"
+                                                                           min="0"
+                                                                           step="1"
+                                                                           placeholder="0" />
+                                                                    <button type="button" class="btn btn-outline-secondary increase-item-btn" data-item-id="@Model.Input.Items[i].ItemId">+</button>
+                                                                </div>
+                                                            </td>
+                                                            <td class="text-end fw-semibold item-line-total" data-item-id="@Model.Input.Items[i].ItemId">@Model.FormatCurrency(0)</td>
+                                                            <td class="text-end">
+                                                                <button type="button" class="btn btn-sm btn-outline-danger remove-item-btn" data-item-id="@Model.Input.Items[i].ItemId" title="Remove item">
+                                                                    <i class="ti ti-trash"></i>
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                    }
+                                                </tbody>
+                                                <tfoot>
+                                                    <tr>
+                                                        <th colspan="2" class="text-end">Total Price</th>
+                                                        <th class="text-end" id="orderTotalDisplay">@Model.FormatCurrency(0)</th>
+                                                        <th></th>
+                                                    </tr>
+                                                </tfoot>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="d-flex justify-content-end gap-2">
+                        <a asp-page="/Admin/Orders" class="btn btn-outline-secondary">
+                            Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="ti ti-check me-2"></i>Create Order
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</main>
+
+<script>
+    const currencyFormatter = new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD'
+    });
+
+    function toggleFulfillmentFields() {
+        const fulfillmentScope = document.querySelector('input[name="Input.FulfillmentScope"]:checked')?.value;
+        const outHouseFulfillmentType = document.querySelector('input[name="Input.OutHouseFulfillmentType"]:checked')?.value;
+        const outHouseFulfillmentSection = document.getElementById('outHouseFulfillmentSection');
+        const addressField = document.getElementById('addressField');
+        const addressInput = document.getElementById('Input_DeliveryAddress');
+        const addressRequired = document.getElementById('addressRequired');
+
+        const isOutHouse = fulfillmentScope === '@((int)OrderFulfillmentScope.OutHouse)';
+        const isDelivery = outHouseFulfillmentType === '@((int)OutHouseFulfillmentType.Delivery)';
+
+        outHouseFulfillmentSection.style.display = isOutHouse ? 'block' : 'none';
+
+        if (isOutHouse && isDelivery) {
+            addressField.style.display = 'block';
+            addressInput.required = true;
+            addressRequired.style.display = 'inline';
+        } else {
+            addressField.style.display = 'none';
+            addressInput.required = false;
+            addressRequired.style.display = 'none';
+        }
+    }
+
+    function getQuantityInput(itemId) {
+        return document.querySelector(`.item-quantity-input[data-item-id="${itemId}"]`);
+    }
+
+    function getUnitPrice(itemId) {
+        const unitPriceInput = document.querySelector(`.item-unit-price[data-item-id="${itemId}"]`);
+        return unitPriceInput ? parseFloat(unitPriceInput.value || '0') : 0;
+    }
+
+    function updateSelectedItemsSummary() {
+        const rows = document.querySelectorAll('.selected-item-row');
+        const emptyState = document.getElementById('selectedItemsEmptyState');
+        const countBadge = document.getElementById('selectedItemsCount');
+        const totalDisplay = document.getElementById('orderTotalDisplay');
+
+        let selectedCount = 0;
+        let totalPrice = 0;
+
+        rows.forEach(row => {
+            const itemId = row.dataset.itemId;
+            const quantityInput = getQuantityInput(itemId);
+            const quantity = parseInt(quantityInput?.value || '0', 10) || 0;
+            const lineTotal = quantity * getUnitPrice(itemId);
+            const lineTotalCell = document.querySelector(`.item-line-total[data-item-id="${itemId}"]`);
+
+            row.style.display = quantity > 0 ? '' : 'none';
+
+            if (lineTotalCell) {
+                lineTotalCell.textContent = currencyFormatter.format(lineTotal);
+            }
+
+            if (quantity > 0) {
+                selectedCount += quantity;
+                totalPrice += lineTotal;
+            }
+        });
+
+        countBadge.textContent = selectedCount.toString();
+        totalDisplay.textContent = currencyFormatter.format(totalPrice);
+        emptyState.style.display = selectedCount > 0 ? 'none' : 'block';
+    }
+
+    function changeItemQuantity(itemId, delta) {
+        const input = getQuantityInput(itemId);
+        if (!input) {
+            return;
+        }
+
+        const currentValue = parseInt(input.value || '0', 10) || 0;
+        input.value = Math.max(0, currentValue + delta);
+        updateSelectedItemsSummary();
+    }
+
+    function filterCatalogItems() {
+        const searchTerm = (document.getElementById('itemSearch')?.value || '').trim().toLowerCase();
+        const categoryId = document.getElementById('categoryFilter')?.value || '';
+        const rows = document.querySelectorAll('.catalog-item');
+
+        rows.forEach(row => {
+            const matchesSearch = !searchTerm || row.dataset.itemName.includes(searchTerm);
+            const matchesCategory = !categoryId || row.dataset.categoryId === categoryId;
+            row.style.display = matchesSearch && matchesCategory ? '' : 'none';
+        });
+    }
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        toggleFulfillmentFields();
+
+        document.getElementById('itemSearch')?.addEventListener('input', filterCatalogItems);
+        document.getElementById('categoryFilter')?.addEventListener('change', filterCatalogItems);
+
+        document.querySelectorAll('.add-item-btn').forEach(button => {
+            button.addEventListener('click', function () {
+                changeItemQuantity(this.dataset.itemId, 1);
+            });
+        });
+
+        document.querySelectorAll('.increase-item-btn').forEach(button => {
+            button.addEventListener('click', function () {
+                changeItemQuantity(this.dataset.itemId, 1);
+            });
+        });
+
+        document.querySelectorAll('.decrease-item-btn').forEach(button => {
+            button.addEventListener('click', function () {
+                changeItemQuantity(this.dataset.itemId, -1);
+            });
+        });
+
+        document.querySelectorAll('.remove-item-btn').forEach(button => {
+            button.addEventListener('click', function () {
+                const input = getQuantityInput(this.dataset.itemId);
+                if (input) {
+                    input.value = 0;
+                    updateSelectedItemsSummary();
+                }
+            });
+        });
+
+        document.querySelectorAll('.item-quantity-input').forEach(input => {
+            input.addEventListener('input', updateSelectedItemsSummary);
+        });
+
+        updateSelectedItemsSummary();
+    });
+</script>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

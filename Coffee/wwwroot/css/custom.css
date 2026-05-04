@@ -1,0 +1,47 @@
+/* Custom styles for login dropdown */
+.navbar-nav .dropdown-menu {
+    background-color: #fff;
+    border: 1px solid rgba(0,0,0,.15);
+    border-radius: 0.25rem;
+    box-shadow: 0 0.5rem 1rem rgba(0,0,0,.175);
+    min-width: 200px;
+}
+
+.navbar-nav .dropdown-item {
+    padding: 0.5rem 1.5rem;
+    color: #333;
+    transition: all 0.3s ease;
+}
+
+.navbar-nav .dropdown-item:hover {
+    background-color: #c49b63;
+    color: #fff;
+}
+
+.navbar-nav .dropdown-item span.icon-user,
+.navbar-nav .dropdown-item span.icon-shopping_cart,
+.navbar-nav .dropdown-item span.icon-settings,
+.navbar-nav .dropdown-item span.icon-power {
+    font-size: 14px;
+}
+
+.navbar-nav .dropdown-divider {
+    margin: 0.5rem 0;
+    border-top: 1px solid rgba(0,0,0,.1);
+}
+
+.navbar-nav .dropdown-toggle::after {
+    margin-left: 0.3em;
+    vertical-align: 0.15em;
+}
+
+/* Ensure dropdown appears on hover and click */
+.navbar-nav .dropdown:hover .dropdown-menu {
+    display: block;
+    margin-top: 0;
+}
+
+.navbar-nav .dropdown-menu-right {
+    right: 0;
+    left: auto;
+}

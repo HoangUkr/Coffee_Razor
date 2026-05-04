@@ -1,0 +1,95 @@
+﻿@page
+@model WebUI.Pages.Admin.CreateCategoryModel
+@{
+    ViewData["Title"] = "Add Category";
+}
+
+<!-- MAIN CONTENT -->
+<main id="content" class="content py-10">
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-12">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+          <div class="">
+            <h1 class="fs-3 mb-1">Add Category</h1>
+            <p class="mb-0">Create a new category</p>
+          </div>
+          <div>
+            <a asp-page="/Admin/Categories" class="btn btn-outline-primary">
+              <i class="ti ti-arrow-left me-2"></i>Back to Categories
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(Model.SuccessMessage))
+    {
+      <div class="row">
+        <div class="col-12">
+          <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="ti ti-check me-2"></i>@Model.SuccessMessage
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        </div>
+      </div>
+    }
+
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+      <div class="row">
+        <div class="col-12">
+          <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="ti ti-alert-circle me-2"></i>@Model.ErrorMessage
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        </div>
+      </div>
+    }
+
+    <div class="row">
+      <div class="col-12 col-lg-8 col-xl-6">
+        <div class="card">
+          <div class="card-header bg-white">
+            <h5 class="mb-0">Category Information</h5>
+          </div>
+          <div class="card-body p-4">
+            <form method="post">
+              <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+              <div class="mb-3">
+                <label asp-for="Input.Name" class="form-label fw-semibold">Category Name <span class="text-danger">*</span></label>
+                <input asp-for="Input.Name" class="form-control" placeholder="Enter category name" autofocus />
+                <span asp-validation-for="Input.Name" class="text-danger small"></span>
+              </div>
+
+              <div class="d-flex gap-2 mt-4">
+                <button type="submit" class="btn btn-primary">
+                  <i class="ti ti-plus me-2"></i>Add Category
+                </button>
+                <button type="reset" class="btn btn-secondary">
+                  <i class="ti ti-refresh me-2"></i>Clear Form
+                </button>
+                <a asp-page="/Admin/Categories" class="btn btn-outline-secondary">
+                  <i class="ti ti-x me-2"></i>Cancel
+                </a>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-12">
+        <footer class="text-center py-2 mt-6 text-secondary">
+          <p class="mb-0">Copyright © @DateTime.Now.Year Coffee Shop Admin Panel</p>
+        </footer>
+      </div>
+    </div>
+  </div>
+</main>
+
+@section Scripts {
+  <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,387 @@
+﻿@page
+@model WebUI.Pages.IndexModel
+@{
+    ViewData["Title"] = "Home";
+}
+
+<!-- Hidden form for antiforgery token -->
+<form id="antiforgeryForm" style="display:none;">
+    @Html.AntiForgeryToken()
+</form>
+
+<!-- HERO SLIDER -->
+<section class="home-slider owl-carousel">
+    <div class="slider-item" style="background-image: url(@Url.Content("~/images/bg_1.jpg"));">
+        <div class="overlay"></div>
+        <div class="container">
+            <div class="row slider-text justify-content-center align-items-center" data-scrollax-parent="true">
+                <div class="col-md-8 col-sm-12 text-center ftco-animate">
+                    <span class="subheading">Welcome</span>
+                    <h1 class="mb-4">The Best Coffee Testing Experience</h1>
+                    <p class="mb-4 mb-md-5">A small river named Duden flows by their place and supplies it with the necessary regelialia.</p>
+                    <p>
+                        <a asp-page="/Menu" class="btn btn-primary p-3 px-xl-4 py-xl-3">Order Now</a>
+                        <a asp-page="/Menu" class="btn btn-white btn-outline-white p-3 px-xl-4 py-xl-3">View Menu</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slider-item" style="background-image: url(@Url.Content("~/images/bg_2.jpg"));">
+        <div class="overlay"></div>
+        <div class="container">
+            <div class="row slider-text justify-content-center align-items-center">
+                <div class="col-md-8 col-sm-12 text-center ftco-animate">
+                    <span class="subheading">Welcome</span>
+                    <h1 class="mb-4">Amazing Taste &amp; Beautiful Place</h1>
+                    <p class="mb-4 mb-md-5">A small river named Duden flows by their place and supplies it with the necessary regelialia.</p>
+                    <p>
+                        <a asp-page="/Menu" class="btn btn-primary p-3 px-xl-4 py-xl-3">Order Now</a>
+                        <a asp-page="/Menu" class="btn btn-white btn-outline-white p-3 px-xl-4 py-xl-3">View Menu</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slider-item" style="background-image: url(@Url.Content("~/images/bg_3.jpg"));">
+        <div class="overlay"></div>
+        <div class="container">
+            <div class="row slider-text justify-content-center align-items-center">
+                <div class="col-md-8 col-sm-12 text-center ftco-animate">
+                    <span class="subheading">Welcome</span>
+                    <h1 class="mb-4">Creamy Hot and Ready to Serve</h1>
+                    <p class="mb-4 mb-md-5">A small river named Duden flows by their place and supplies it with the necessary regelialia.</p>
+                    <p>
+                        <a asp-page="/Orders/Create" class="btn btn-primary p-3 px-xl-4 py-xl-3">Order Now</a>
+                        <a asp-page="/Items/Index" class="btn btn-white btn-outline-white p-3 px-xl-4 py-xl-3">View Menu</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CONTACT INFO SECTION -->
+<section class="ftco-intro">
+    <div class="container-wrap">
+        <div class="wrap d-md-flex align-items-xl-end">
+            <div class="info">
+                <div class="row no-gutters">
+                    <div class="col-md-4 d-flex ftco-animate">
+                        <div class="icon"><span class="icon-phone"></span></div>
+                        <div class="text">
+                            <h3>000 (123) 456 7890</h3>
+                            <p>A small river named Duden flows by their place and supplies.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4 d-flex ftco-animate">
+                        <div class="icon"><span class="icon-my_location"></span></div>
+                        <div class="text">
+                            <h3>198 West 21th Street</h3>
+                            <p>203 Fake St. Mountain View, San Francisco, California, USA</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4 d-flex ftco-animate">
+                        <div class="icon"><span class="icon-clock-o"></span></div>
+                        <div class="text">
+                            <h3>Open Monday-Friday</h3>
+                            <p>8:00am - 9:00pm</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="book p-4">
+                <h3>Book a Table</h3>
+
+                @if (!string.IsNullOrEmpty(Model.SuccessMessage))
+                {
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="icon-check"></i> @Model.SuccessMessage
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                }
+
+                @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+                {
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="icon-alert-circle"></i> @Model.ErrorMessage
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                }
+
+                @if (!string.IsNullOrEmpty(Model.InlineErrorMessage))
+                {
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="icon-alert-circle"></i> @Model.InlineErrorMessage
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                }
+
+                <form method="post" asp-page-handler="BookTable" class="appointment-form" id="bookingForm">
+                    @Html.AntiForgeryToken()
+                    <div class="d-md-flex">
+                        <div class="form-group">
+                            <input type="text" name="firstName" class="form-control" placeholder="First Name" required>
+                        </div>
+                        <div class="form-group ml-md-4">
+                            <input type="text" name="lastName" class="form-control" placeholder="Last Name" required>
+                        </div>
+                    </div>
+                    <div class="d-md-flex">
+                        <div class="form-group">
+                            <input type="email" name="email" class="form-control" placeholder="Email (Optional)">
+                        </div>
+                        <div class="form-group ml-md-4">
+                            <input type="tel" name="phone" class="form-control" placeholder="Phone *" required>
+                        </div>
+                    </div>
+                    <div class="d-md-flex">
+                        <div class="form-group">
+                            <div class="input-wrap">
+                                <div class="icon"><span class="ion-md-calendar"></span></div>
+                                <input type="text" name="date" class="form-control appointment_date" placeholder="Date *" required>
+                            </div>
+                        </div>
+                        <div class="form-group ml-md-4">
+                            <div class="input-wrap">
+                                <div class="icon"><span class="ion-ios-clock"></span></div>
+                                <input type="text" name="time" class="form-control appointment_time" placeholder="Time *" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-md-flex">
+                        <div class="form-group">
+                            <textarea name="message" cols="30" rows="2" class="form-control" placeholder="Special requests (Optional)"></textarea>
+                        </div>
+                        <div class="form-group ml-md-4">
+                            <input type="submit" value="Book Table" class="btn btn-white py-3 px-4">
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ABOUT SECTION -->
+<section class="ftco-about d-md-flex">
+    <div class="one-half img" style="background-image: url(@Url.Content("~/images/about.jpg"));"></div>
+    <div class="one-half ftco-animate">
+        <div class="overlap">
+            <div class="heading-section ftco-animate">
+                <span class="subheading">Discover</span>
+                <h2 class="mb-4">Our Story</h2>
+            </div>
+            <div>
+                <p>On her way she met a copy. The copy warned the Little Blind Text, that where it came from it would have been rewritten a thousand times and everything that was left from its origin would be the word "and" and the Little Blind Text should turn around and return to its own, safe country.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- SERVICES SECTION -->
+<section class="ftco-section ftco-services">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-4 ftco-animate">
+                <div class="media d-block text-center block-6 services">
+                    <div class="icon d-flex justify-content-center align-items-center mb-5">
+                        <span class="flaticon-choices"></span>
+                    </div>
+                    <div class="media-body">
+                        <h3 class="heading">Easy to Order</h3>
+                        <p>Even the all-powerful Pointing has no control about the blind texts it is an almost unorthographic.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 ftco-animate">
+                <div class="media d-block text-center block-6 services">
+                    <div class="icon d-flex justify-content-center align-items-center mb-5">
+                        <span class="flaticon-delivery-truck"></span>
+                    </div>
+                    <div class="media-body">
+                        <h3 class="heading">Fastest Delivery</h3>
+                        <p>Even the all-powerful Pointing has no control about the blind texts it is an almost unorthographic.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 ftco-animate">
+                <div class="media d-block text-center block-6 services">
+                    <div class="icon d-flex justify-content-center align-items-center mb-5">
+                        <span class="flaticon-coffee-bean"></span>
+                    </div>
+                    <div class="media-body">
+                        <h3 class="heading">Quality Coffee</h3>
+                        <p>Even the all-powerful Pointing has no control about the blind texts it is an almost unorthographic.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- BEST SELLERS SECTION (Dynamic from Database) -->
+<section class="ftco-section">
+    <div class="container">
+        <div class="row justify-content-center mb-5 pb-3">
+            <div class="col-md-7 heading-section ftco-animate text-center">
+                <span class="subheading">Discover</span>
+                <h2 class="mb-4">Best Coffee Sellers</h2>
+                <p>Far far away, behind the word mountains, far from the countries Vokalia and Consonantia, there live the blind texts.</p>
+            </div>
+        </div>
+        <div class="row">
+            @foreach (var item in Model.BestSellers)
+            {
+                <div class="col-md-3">
+                    <div class="menu-entry">
+                        <a asp-page="/Items/Details" asp-route-id="@item.Id" class="img" style="background-image: url(@item.DefaultImageUrl);"></a>
+                        <div class="text text-center pt-4">
+                            <h3><a asp-page="/Items/Details" asp-route-id="@item.Id">@item.Name</a></h3>
+                            <p>@item.CategoryName</p>
+                            <p class="price"><span>@item.Price.ToString("C")</span></p>
+                            <p>
+                                <button type="button" class="btn btn-primary btn-outline-primary" onclick="addToCart(@item.Id)">
+                                    Add to Cart
+                                </button>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        async function addToCart(itemId) {
+            try {
+                // Get the antiforgery token
+                const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+
+                const formData = new FormData();
+                formData.append('itemId', itemId);
+                formData.append('quantity', 1);
+                if (token) {
+                    formData.append('__RequestVerificationToken', token);
+                }
+
+                const response = await fetch('/Cart?handler=AddToCart', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to add item to cart');
+                }
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // Update cart count in header
+                    const cartCountElements = document.querySelectorAll('.cart-count, #cart-count');
+                    cartCountElements.forEach(element => {
+                        element.textContent = result.itemCount;
+                    });
+
+                    // Show success message
+                    showToast('Item added to cart!', 'success');
+                } else {
+                    showToast(result.message || 'Failed to add item to cart', 'error');
+                }
+            } catch (error) {
+                console.error('Error adding item to cart:', error);
+                showToast('An error occurred. Please try again.', 'error');
+            }
+        }
+
+        function showToast(message, type) {
+            // Create toast element
+            const toast = document.createElement('div');
+            toast.className = `alert alert-${type === 'success' ? 'success' : 'danger'} position-fixed`;
+            toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 250px;';
+            toast.innerHTML = `
+                <i class="icon-${type === 'success' ? 'check' : 'alert-circle'}"></i> ${message}
+            `;
+            document.body.appendChild(toast);
+
+            // Auto remove after 3 seconds
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        // Debug booking form submission
+        $(document).ready(function() {
+            // Auto-dismiss alerts after 3 seconds
+            setTimeout(function() {
+                $('.alert').fadeOut('slow', function() {
+                    $(this).remove();
+                });
+            }, 3000); // 3 seconds
+
+            // Check if there's a success message and clear the form
+            @if (!string.IsNullOrEmpty(Model.SuccessMessage))
+            {
+                <text>
+                // Clear the booking form after successful submission
+                $('#bookingForm')[0].reset();
+
+                // Clear and reset the datepicker
+                if (typeof $.fn.datepicker !== 'undefined') {
+                    $('.appointment_date').datepicker('clearDates');
+                    $('.appointment_date').val('');
+                }
+
+                // Clear the timepicker
+                $('.appointment_time').val('');
+                </text>
+            }
+
+            $('#bookingForm').on('submit', function(e) {
+                console.log('Booking form is being submitted...');
+                console.log('Form data:', $(this).serialize());
+            });
+
+            // Ensure datepicker and timepicker are initialized
+            if (typeof $.fn.datepicker !== 'undefined') {
+                // Destroy existing datepicker instance if it exists
+                $('.appointment_date').datepicker('destroy');
+
+                // Reinitialize with fresh settings
+                $('.appointment_date').datepicker({
+                    'format': 'm/d/yyyy',
+                    'autoclose': true,
+                    'startDate': new Date(),  // Prevent selecting past dates
+                    'clearBtn': true,
+                    'todayHighlight': true
+                });
+
+                // Clear any existing value
+                $('.appointment_date').datepicker('clearDates');
+            }
+
+            if (typeof $.fn.timepicker !== 'undefined') {
+                $('.appointment_time').timepicker({
+                    'timeFormat': 'g:i A',
+                    'interval': 30,
+                    'minTime': '8:00am',
+                    'maxTime': '9:00pm',
+                    'startTime': '8:00am',
+                    'dynamic': false,
+                    'dropdown': true,
+                    'scrollbar': true
+                });
+            }
+        });
+    </script>
+}

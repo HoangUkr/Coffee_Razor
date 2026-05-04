@@ -1,0 +1,22 @@
+﻿@if (User.Identity?.IsAuthenticated == true)
+{
+    <li class="nav-item">
+        <a class="nav-link" asp-page="/Admin/Index">
+            <span class="icon-settings mr-2"></span> To Admin Page
+        </a>
+    </li>
+    <li class="nav-item">
+        <a href="#" class="nav-link" onclick="document.getElementById('logoutForm').submit(); return false;">
+            <span class="icon-power mr-2"></span> Logout
+        </a>
+    </li>
+    <form id="logoutForm" method="post" asp-page="/Admin/Login" asp-page-handler="Logout" asp-route-returnUrl="/Index"></form>
+}
+else
+{
+    <li class="nav-item">
+        <a asp-page="/Admin/Login" class="nav-link">
+            <span class="icon-user"></span> Login
+        </a>
+    </li>
+}

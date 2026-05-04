@@ -1,0 +1,294 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>InApp Inventory Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="apple-touch-icon" sizes="180x180" href="~/admin_assets/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="~/admin_assets/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="~/admin_assets/images/favicon-16x16.png">
+  <link rel="manifest" href="~/admin_assets/site.webmanifest">
+
+  <script type="module" crossorigin src="~/admin_assets/js/main.js"></script>
+  <link rel="stylesheet" crossorigin href="~/admin_assets/css/main.css">
+
+  @await RenderSectionAsync("Styles", required: false)
+</head>
+
+<body>
+  <div id="overlay" class="overlay"></div>
+  <!-- TOPBAR -->
+  <nav id="topbar" class="navbar bg-white border-bottom fixed-top topbar px-3">
+    <button id="toggleBtn" class="d-none d-lg-inline-flex btn btn-light btn-icon btn-sm ">
+      <i class="ti ti-layout-sidebar-left-expand"></i>
+    </button>
+
+    <!-- MOBILE -->
+    <button id="mobileBtn" class="btn btn-light btn-icon btn-sm d-lg-none me-2">
+      <i class="ti ti-layout-sidebar-left-expand"></i>
+    </button>
+    <div>
+      <!-- Navbar nav -->
+      <ul class="list-unstyled d-flex align-items-center mb-0 gap-1">
+        <!-- Pages link -->
+
+        <!-- Bell icon -->
+        <li class="dropdown">
+          <a class="position-relative btn-icon btn-sm btn-light btn rounded-circle" data-bs-toggle="dropdown"
+            aria-expanded="false" href="#" role="button" id="notificationBellButton">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+              class="icon icon-tabler icons-tabler-outline icon-tabler-bell">
+              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+              <path d="M10 5a2 2 0 1 1 4 0a7 7 0 0 1 4 6v3a4 4 0 0 0 2 3h-16a4 4 0 0 0 2 -3v-3a7 7 0 0 1 4 -6" />
+              <path d="M9 17v1a3 3 0 0 0 6 0v-1" />
+            </svg>
+            <span id="notificationUnreadBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger mt-2 ms-n2" style="display:none;">
+              0
+              <span class="visually-hidden">unread messages</span>
+            </span>
+          </a>
+          <div class="dropdown-menu dropdown-menu-end dropdown-menu-md p-0" style="width: 360px;">
+            <div class="px-3 py-2 border-bottom">
+              <div class="fw-semibold">Notifications</div>
+              <div class="small text-muted">Today first. Scroll for older notifications.</div>
+            </div>
+            <div id="notificationList" style="max-height: 420px; overflow-y: auto;">
+              <div id="notificationTodaySection" class="border-bottom">
+                <div class="px-3 pt-3 pb-2 small fw-semibold text-uppercase text-muted">Today</div>
+                <ul id="todayNotificationItems" class="list-unstyled p-0 m-0"></ul>
+              </div>
+              <div id="notificationPastSection" class="d-none">
+                <div class="px-3 pt-3 pb-2 small fw-semibold text-uppercase text-muted">Earlier</div>
+                <ul id="pastNotificationItems" class="list-unstyled p-0 m-0"></ul>
+              </div>
+              <div id="notificationEmptyState" class="px-3 py-4 text-center text-muted small d-none">
+                No notifications found.
+              </div>
+              <div id="notificationLoading" class="px-3 py-3 text-center text-muted small d-none">
+                Loading notifications...
+              </div>
+            </div>
+          </div>
+        </li>
+      </ul>
+    </div>
+
+  </nav>
+
+  <!-- SIDEBAR -->
+  <aside id="sidebar" class="sidebar">
+    <div class="logo-area">
+     <a href="index.html" class="d-inline-flex"><img src="data:image/svg+xml,%3csvg%20width='62'%20height='67'%20viewBox='0%200%2062%2067'%20fill='none'%20xmlns='http://www.w3.org/2000/svg'%3e%3cpath%20d='M30.604%2066.378L0.00805664%2048.1582V35.7825L30.604%2054.0023V66.378Z'%20fill='%23302C4D'/%3e%3cpath%20d='M61.1996%2048.1582L30.604%2066.378V54.0023L61.1996%2035.7825V48.1582Z'%20fill='%23E66239'/%3e%3cpath%20d='M30.5955%200L0%2018.2198V30.5955L30.5955%2012.3757V0Z'%20fill='%23657E92'/%3e%3cpath%20d='M61.191%2018.2198L30.5955%200V12.3757L61.191%2030.5955V18.2198Z'%20fill='%23A3B2BE'/%3e%3cpath%20d='M30.604%2048.8457L0.00805664%2030.6259V18.2498L30.604%2036.47V48.8457Z'%20fill='%23302C4D'/%3e%3cpath%20d='M61.1996%2030.6259L30.604%2048.8457V36.47L61.1996%2018.2498V30.6259Z'%20fill='%23E66239'/%3e%3c/svg%3e" alt="" width="24">
+        <span class="logo-text ms-2"> <img src="~/admin_assets/images/logo.svg" alt=""></span>
+      </a>
+    </div>
+    <ul class="nav flex-column">
+      <li class="px-4 py-2"><small class="nav-text">Main</small></li>
+      <li><a class="nav-link active" asp-page="/Admin/Inventory"><i class="ti ti-home"></i><span
+            class="nav-text">Dashboard</span></a></li>
+      <li><a class="nav-link" asp-page="/Admin/Inventory"><i class="ti ti-box-seam"></i><span
+            class="nav-text">Inventory</span></a></li>
+      <li><a class="nav-link" asp-page="/Admin/Categories"><i class="ti ti-category"></i><span
+            class="nav-text">Categories</span></a></li>
+      <li><a class="nav-link" asp-page="/Admin/Users"><i class="ti ti-users"></i><span
+            class="nav-text">Users</span></a></li>
+      <li><a class="nav-link" asp-page="/Admin/Reservation"><i class="ti ti-calendar-event"></i><span
+            class="nav-text">Reservations</span></a></li>
+      <li><a class="nav-link" asp-page="/Admin/Orders"><i class="ti ti-shopping-cart"></i><span
+            class="nav-text">Orders</span></a></li>
+      <li class="px-4 pt-4 pb-2"><small class="nav-text">Account</small></li>
+      <li>
+        <form method="post" asp-page="/Admin/Login" asp-page-handler="Logout" class="m-0">
+          <button type="submit" class="nav-link border-0 bg-transparent w-100 text-start">
+            <i class="ti ti-logout"></i><span class="nav-text">Log out</span>
+          </button>
+        </form>
+      </li>
+    </ul>
+
+  </aside>
+  <main>
+        @RenderBody()
+  </main>
+
+  <!-- jQuery (required for validation) -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+  <!-- Bootstrap Bundle with Popper -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
+
+  <!-- Admin Assets JS -->
+  <script src="~/admin-assets/js/main.js"></script>
+
+  <script>
+    (() => {
+      const badge = document.getElementById('notificationUnreadBadge');
+      const notificationList = document.getElementById('notificationList');
+      const todayContainer = document.getElementById('todayNotificationItems');
+      const pastContainer = document.getElementById('pastNotificationItems');
+      const pastSection = document.getElementById('notificationPastSection');
+      const emptyState = document.getElementById('notificationEmptyState');
+      const loadingIndicator = document.getElementById('notificationLoading');
+      const bellButton = document.getElementById('notificationBellButton');
+      const notificationDropdown = bellButton ? bootstrap.Dropdown.getOrCreateInstance(bellButton) : null;
+
+      let todayLoaded = false;
+      let pastPageNumber = 1;
+      let hasMorePast = true;
+      let isLoading = false;
+
+      function setLoading(isVisible) {
+        loadingIndicator.classList.toggle('d-none', !isVisible);
+      }
+
+      function updateEmptyState() {
+        const hasTodayItems = todayContainer.children.length > 0;
+        const hasPastItems = pastContainer.children.length > 0;
+        emptyState.classList.toggle('d-none', hasTodayItems || hasPastItems);
+      }
+
+      function resetNotifications() {
+        todayContainer.innerHTML = '';
+        pastContainer.innerHTML = '';
+        pastSection.classList.add('d-none');
+        todayLoaded = false;
+        pastPageNumber = 1;
+        hasMorePast = true;
+        updateEmptyState();
+      }
+
+      function formatRelativeTime(dateValue) {
+        const createdDate = new Date(dateValue);
+        const diffMinutes = Math.max(1, Math.floor((Date.now() - createdDate.getTime()) / 60000));
+
+        if (diffMinutes < 60) {
+          return `${diffMinutes} minute${diffMinutes === 1 ? '' : 's'} ago`;
+        }
+
+        const diffHours = Math.floor(diffMinutes / 60);
+        if (diffHours < 24) {
+          return `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
+        }
+
+        return createdDate.toLocaleString();
+      }
+
+      async function refreshUnreadCount() {
+        const response = await fetch('/admin/notifications/unread-count');
+        if (!response.ok) {
+          return;
+        }
+
+        const data = await response.json();
+        badge.textContent = data.unreadCount;
+        badge.style.display = data.unreadCount > 0 ? 'inline-flex' : 'none';
+      }
+
+      function appendNotifications(container, notifications) {
+        notifications.forEach(notification => {
+          const item = document.createElement('li');
+          item.className = 'px-3 py-3 border-bottom notification-item';
+          item.dataset.notificationId = notification.id;
+          item.dataset.targetUrl = notification.targetUrl || '';
+          item.innerHTML = `
+            <a href="#" class="text-decoration-none text-reset d-block ${notification.isRead ? '' : 'fw-semibold'}">
+              <div class="small mb-1">${notification.displayMessage}</div>
+              <div class="text-secondary small">${formatRelativeTime(notification.createdDate)}</div>
+            </a>`;
+
+          item.addEventListener('click', async (event) => {
+            event.preventDefault();
+            const markReadResponse = await fetch(`/admin/notifications/${notification.id}/read`, { method: 'POST' });
+            if (markReadResponse.ok) {
+              const markReadData = await markReadResponse.json();
+              badge.textContent = markReadData.unreadCount;
+              badge.style.display = markReadData.unreadCount > 0 ? 'inline-flex' : 'none';
+              item.querySelector('a')?.classList.remove('fw-semibold');
+            }
+
+            if (notification.targetUrl) {
+              window.location.href = notification.targetUrl;
+            }
+          });
+
+          container.appendChild(item);
+        });
+
+        updateEmptyState();
+      }
+
+      async function loadTodayNotifications() {
+        if (todayLoaded) {
+          return;
+        }
+
+        setLoading(true);
+        const response = await fetch('/admin/notifications?pageNumber=1&pageSize=50&scope=today');
+        if (response.ok) {
+          const data = await response.json();
+          appendNotifications(todayContainer, data.items || []);
+          todayLoaded = true;
+        }
+        setLoading(false);
+      }
+
+      async function loadPastNotifications() {
+        if (!hasMorePast || isLoading) {
+          return;
+        }
+
+        isLoading = true;
+        setLoading(true);
+        const response = await fetch(`/admin/notifications?pageNumber=${pastPageNumber}&pageSize=15&scope=past`);
+        if (response.ok) {
+          const data = await response.json();
+          const notifications = data.items || [];
+          if (notifications.length > 0) {
+            pastSection.classList.remove('d-none');
+            appendNotifications(pastContainer, notifications);
+            pastPageNumber++;
+          }
+
+          hasMorePast = notifications.length === 15;
+        }
+        setLoading(false);
+        isLoading = false;
+      }
+
+      bellButton?.addEventListener('click', async (event) => {
+        event.preventDefault();
+        notificationDropdown?.toggle();
+        await loadTodayNotifications();
+      });
+
+      notificationList?.addEventListener('scroll', async () => {
+        if (notificationList.scrollTop + notificationList.clientHeight >= notificationList.scrollHeight - 40) {
+          await loadPastNotifications();
+        }
+      });
+
+      const notificationConnection = new signalR.HubConnectionBuilder()
+        .withUrl('/hubs/admin-notifications')
+        .withAutomaticReconnect()
+        .build();
+
+      notificationConnection.on('NotificationReceived', async () => {
+        await refreshUnreadCount();
+        resetNotifications();
+        await loadTodayNotifications();
+      });
+
+      notificationConnection.start().catch(error => console.error('Notification hub connection failed', error));
+
+      refreshUnreadCount();
+    })();
+  </script>
+
+  @await RenderSectionAsync("Scripts", required: false)
+  </body>
+
+</html>

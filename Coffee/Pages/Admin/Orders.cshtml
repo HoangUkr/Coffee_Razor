@@ -1,0 +1,292 @@
+@page
+@model WebUI.Pages.Admin.OrdersModel
+@using Domain.Enums
+@{
+    ViewData["Title"] = "Orders Management";
+}
+
+<!-- MAIN CONTENT -->
+<main id="content" class="content py-10">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div class="">
+                        <h1 class="fs-3 mb-1">Orders Management</h1>
+                        <p class="mb-0">
+                            Manage customer orders and update statuses
+                            @if (Model.PaginatedOrders.TotalCount > 0)
+                            {
+                                <span class="badge bg-secondary ms-2">@Model.PaginatedOrders.TotalCount Total Orders</span>
+                            }
+                        </p>
+                    </div>
+                    <div>
+                        <a asp-page="/Admin/CreateOrder" class="btn btn-primary">
+                            <i class="ti ti-plus me-2"></i>Create Order
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(Model.SuccessMessage))
+        {
+            <div class="row">
+                <div class="col-12">
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="ti ti-check me-2"></i>@Model.SuccessMessage
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                </div>
+            </div>
+        }
+
+        @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+        {
+            <div class="row">
+                <div class="col-12">
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="ti ti-alert-circle me-2"></i>@Model.ErrorMessage
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <!-- Filters -->
+        <div class="row mb-3">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <form method="get" id="filterForm">
+                            <div class="row g-3 align-items-end">
+                                <!-- Customer Code Filter -->
+                                <div class="col-md-2">
+                                    <label for="customerCode" class="form-label">Customer Code</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="ti ti-user"></i></span>
+                                        <input type="text" 
+                                               id="customerCode" 
+                                               name="customerCode"
+                                               class="form-control" 
+                                               placeholder="C240101001..."
+                                               value="@Model.CustomerCode" />
+                                    </div>
+                                </div>
+
+                                <!-- Order Code Filter -->
+                                <div class="col-md-2">
+                                    <label for="orderCode" class="form-label">Order Code</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="ti ti-receipt"></i></span>
+                                        <input type="text" 
+                                               id="orderCode" 
+                                               name="orderCode"
+                                               class="form-control" 
+                                               placeholder="ABC12..."
+                                               value="@Model.OrderCode" />
+                                    </div>
+                                </div>
+
+                                <!-- Date Filter -->
+                                <div class="col-md-2">
+                                    <label for="createdDate" class="form-label">Created Date</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="ti ti-calendar"></i></span>
+                                        <input type="date" 
+                                               id="createdDate" 
+                                               name="createdDate"
+                                               class="form-control" 
+                                               value="@(Model.CreatedDate?.ToString("yyyy-MM-dd"))" />
+                                        @if (Model.CreatedDate.HasValue)
+                                        {
+                                            <button type="button" 
+                                                    onclick="clearDateFilter()" 
+                                                    class="btn btn-outline-secondary"
+                                                    title="Clear date filter">
+                                                <i class="ti ti-x"></i>
+                                            </button>
+                                        }
+                                    </div>
+                                </div>
+
+                                <!-- Status Filter -->
+                                <div class="col-md-2">
+                                    <label for="statusFilter" class="form-label">Status</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="ti ti-filter"></i></span>
+                                        <select id="statusFilter" 
+                                                name="statusFilter" 
+                                                class="form-select">
+                                            <option value="">All Statuses</option>
+                                            <option value="@OrderStatus.Pending" selected="@(Model.StatusFilter == OrderStatus.Pending)">Pending</option>
+                                            <option value="@OrderStatus.InProgress" selected="@(Model.StatusFilter == OrderStatus.InProgress)">In Progress</option>
+                                            <option value="@OrderStatus.ReadyToPickup" selected="@(Model.StatusFilter == OrderStatus.ReadyToPickup)">Ready to Pickup</option>
+                                            <option value="@OrderStatus.OnTheWay" selected="@(Model.StatusFilter == OrderStatus.OnTheWay)">On the Way</option>
+                                            <option value="@OrderStatus.Completed" selected="@(Model.StatusFilter == OrderStatus.Completed)">Completed</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- Page Size Filter -->
+                                <div class="col-md-2">
+                                    <label for="pageSize" class="form-label">Per Page</label>
+                                    <select id="pageSize" name="pageSize" class="form-select">
+                                        <option value="10" selected="@(Model.PageSize == 10)">10</option>
+                                        <option value="25" selected="@(Model.PageSize == 25)">25</option>
+                                        <option value="50" selected="@(Model.PageSize == 50)">50</option>
+                                        <option value="100" selected="@(Model.PageSize == 100)">100</option>
+                                    </select>
+                                </div>
+
+                                <!-- Filter/Clear Buttons -->
+                                <div class="col-md-2">
+                                    <button type="submit" class="btn btn-primary w-100">
+                                        <i class="ti ti-search me-2"></i>Filter
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Orders Table -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        @if (Model.Orders.Any())
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle">
+                                    <thead>
+                                        <tr>
+                                            <th>Order Code</th>
+                                            <th>Customer Code</th>
+                                            <th>Customer Name</th>
+                                            <th>Created Date</th>
+                                            <th>Status</th>
+                                            <th>Total Price</th>
+                                            <th>Items</th>
+                                            <th>Completed Date</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var order in Model.Orders)
+                                        {
+                                            <tr>
+                                                <td>
+                                                    <a asp-page="/Admin/OrderDetail" 
+                                                       asp-route-orderCode="@order.OrderCode"
+                                                       class="fw-bold text-decoration-none">
+                                                        @order.OrderCode
+                                                    </a>
+                                                </td>
+                                                <td><span class="badge bg-secondary">@order.CustomerCode</span></td>
+                                                <td>@order.CustomerName</td>
+                                                <td>@order.CreatedDate.ToString("MMM dd, yyyy HH:mm")</td>
+                                                <td>
+                                                    <span class="badge @Model.GetStatusBadgeClass(order.Status)">
+                                                        @Model.GetStatusDisplayName(order.Status)
+                                                    </span>
+                                                </td>
+                                                <td>@order.TotalPrice.ToString("C")</td>
+                                                <td>@order.TotalItemsAmount</td>
+                                                <td>
+                                                    @if (order.CompletedDate.HasValue)
+                                                    {
+                                                        @order.CompletedDate.Value.ToString("MMM dd, yyyy HH:mm")
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="text-muted">-</span>
+                                                    }
+                                                </td>
+                                                <td>
+                                                    @if (order.Status != OrderStatus.Completed)
+                                                    {
+                                                        var nextStatus = Model.GetNextStatus(order.Status, order.FulfillmentScope, order.OutHouseFulfillmentType);
+                                                        if (!string.IsNullOrEmpty(nextStatus))
+                                                        {
+                                                            var status = Enum.Parse<OrderStatus>(nextStatus);
+                                                            <form method="post" asp-page-handler="UpdateStatus" class="d-inline">
+                                                                <input type="hidden" name="orderId" value="@order.Id" />
+                                                                <input type="hidden" name="version" value="@order.Version" />
+                                                                <input type="hidden" name="newStatus" value="@status" />
+                                                                <button type="submit" 
+                                                                        class="btn btn-sm btn-outline-primary"
+                                                                        onclick="return confirm('Update order status to @Model.GetStatusDisplayName(status)?')">
+                                                                    <i class="ti ti-arrow-right me-1"></i>@Model.GetStatusDisplayName(status)
+                                                                </button>
+                                                            </form>
+                                                        }
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="badge bg-success">
+                                                            <i class="ti ti-check"></i> Done
+                                                        </span>
+                                                    }
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Pagination -->
+                            @if (Model.PaginatedOrders.TotalPages > 1)
+                            {
+                                <nav aria-label="Order pagination" class="mt-4">
+                                    <ul class="pagination justify-content-center">
+                                        <li class="page-item @(!Model.PaginatedOrders.HasPreviousPage ? "disabled" : "")">
+                                            <a class="page-link" 
+                                               href="?PageNumber=@(Model.PageNumber - 1)&PageSize=@Model.PageSize&CustomerCode=@Model.CustomerCode&OrderCode=@Model.OrderCode&CreatedDate=@Model.CreatedDate?.ToString("yyyy-MM-dd")&StatusFilter=@Model.StatusFilter&SortBy=@Model.SortBy&SortDescending=@Model.SortDescending">
+                                                <i class="ti ti-chevron-left"></i> Previous
+                                            </a>
+                                        </li>
+
+                                        @for (int i = 1; i <= Model.PaginatedOrders.TotalPages; i++)
+                                        {
+                                            <li class="page-item @(i == Model.PageNumber ? "active" : "")">
+                                                <a class="page-link" 
+                                                   href="?PageNumber=@i&PageSize=@Model.PageSize&CustomerCode=@Model.CustomerCode&OrderCode=@Model.OrderCode&CreatedDate=@Model.CreatedDate?.ToString("yyyy-MM-dd")&StatusFilter=@Model.StatusFilter&SortBy=@Model.SortBy&SortDescending=@Model.SortDescending">
+                                                    @i
+                                                </a>
+                                            </li>
+                                        }
+
+                                        <li class="page-item @(!Model.PaginatedOrders.HasNextPage ? "disabled" : "")">
+                                            <a class="page-link" 
+                                               href="?PageNumber=@(Model.PageNumber + 1)&PageSize=@Model.PageSize&CustomerCode=@Model.CustomerCode&OrderCode=@Model.OrderCode&CreatedDate=@Model.CreatedDate?.ToString("yyyy-MM-dd")&StatusFilter=@Model.StatusFilter&SortBy=@Model.SortBy&SortDescending=@Model.SortDescending">
+                                                Next <i class="ti ti-chevron-right"></i>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </nav>
+                            }
+                        }
+                        else
+                        {
+                            <div class="text-center py-5">
+                                <i class="ti ti-inbox fs-1 text-muted"></i>
+                                <p class="text-muted mt-3">No orders found. Try adjusting your filters or create a new order.</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script>
+    function clearDateFilter() {
+        document.getElementById('createdDate').value = '';
+        document.getElementById('filterForm').submit();
+    }
+</script>
