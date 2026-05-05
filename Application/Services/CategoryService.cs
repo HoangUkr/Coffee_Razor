@@ -1,4 +1,5 @@
-﻿using Application.DTOs.Category;
+﻿using System.Diagnostics;
+using Application.DTOs.Category;
 using Application.DTOs.Common;
 using Application.Exceptions;
 using Application.Interfaces;
@@ -153,8 +154,10 @@ namespace Application.Services
                 return cachedCategories;
             }
 
-            _logger.LogInformation("CATEGORY LIST SOURCE | Source: DB");
+            var sw = Stopwatch.StartNew();
             var categories = await _categoryRepository.GetAllAsync();
+            sw.Stop();
+            _logger.LogInformation("CATEGORY LIST SOURCE | Source: DB | Elapsed: {ElapsedMs}ms", sw.ElapsedMilliseconds);
             var orderedCategories = categories.OrderBy(c => c.DisplayOrder).ThenBy(c => c.CreatedDate);
             var categoryResponses = _mapper.Map<List<CategoryResponse>>(orderedCategories);
             await _cacheService.SetAsync(CategoriesCacheKey, categoryResponses, CategoriesCacheDuration);

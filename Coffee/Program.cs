@@ -2,10 +2,12 @@ using Application;
 using Application.Interfaces;
 using Application.Services;
 using Application.Repositories;
+using Application.DTOs.Settings;
 
 using Infrastructure.Data;
 using Infrastructure.Repositories;
 using Infrastructure.Services;
+using Infrastructure.Settings;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
@@ -86,6 +88,9 @@ builder.Services.AddScoped<IItemImageRepository, ItemImageRepository>();
 builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 builder.Services.AddScoped<IReservationRepository, ReservationRepository>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
+builder.Services.AddScoped<ISystemSettingRepository, SystemSettingRepository>();
+builder.Services.AddScoped<IWorkingScheduleRepository, WorkingScheduleRepository>();
+builder.Services.AddScoped<IHolidayRepository, HolidayRepository>();
 
 // Register services
 builder.Services.AddScoped<IUserService, UserService>();
@@ -97,12 +102,16 @@ builder.Services.AddScoped<IReservationService, ReservationService>();
 builder.Services.AddScoped<IStorageService, AzureBlobStorageService>();
 builder.Services.AddScoped<ICacheService, RedisCacheService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<ISystemSettingService, SystemSettingService>();
+builder.Services.AddScoped<IWorkingScheduleService, WorkingScheduleService>();
+builder.Services.AddScoped<IHolidayService, HolidayService>();
 builder.Services.AddScoped<ITokenBlacklistService, TokenBlacklistService>();
 builder.Services.AddSingleton<IAdminNotificationPublisher, SignalRAdminNotificationPublisher>();
 
 // Register infrastructure services with interfaces
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection(EmailSettings.SectionName));
 builder.Services.AddScoped<IEmailService, EmailService>();
 
 // Configure JWT Authentication

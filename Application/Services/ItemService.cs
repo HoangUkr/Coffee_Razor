@@ -1,4 +1,5 @@
-﻿using Application.DTOs.Item;
+﻿using System.Diagnostics;
+using Application.DTOs.Item;
 using Application.DTOs.Common;
 using Application.Exceptions;
 using Application.Interfaces;
@@ -52,8 +53,10 @@ namespace Application.Services
                 return cachedItem;
             }
 
-            _logger.LogInformation("ITEM DETAIL SOURCE | ItemId: {ItemId} | Source: DB", id);
+            var sw = Stopwatch.StartNew();
             var item = await _itemRepository.GetByIdAsync(id);
+            sw.Stop();
+            _logger.LogInformation("ITEM DETAIL SOURCE | ItemId: {ItemId} | Source: DB | Elapsed: {ElapsedMs}ms", id, sw.ElapsedMilliseconds);
             if (item == null)
             {
                 return null;
@@ -79,8 +82,10 @@ namespace Application.Services
                 return cachedItems;
             }
 
-            _logger.LogInformation("ACTIVE ITEMS SOURCE | Source: DB");
+            var sw = Stopwatch.StartNew();
             var items = await _itemRepository.GetAllActiveAsync();
+            sw.Stop();
+            _logger.LogInformation("ACTIVE ITEMS SOURCE | Source: DB | Elapsed: {ElapsedMs}ms", sw.ElapsedMilliseconds);
             var itemResponses = _mapper.Map<List<ItemResponse>>(items, opts => opts.Items["StorageService"] = _storageService);
             await _cacheService.SetAsync(ActiveItemsCacheKey, itemResponses, ActiveItemsCacheDuration);
             return itemResponses;
@@ -164,12 +169,13 @@ namespace Application.Services
             }
             catch (DbUpdateConcurrencyException)
             {
+                await InvalidateItemCachesAsync(id);
                 throw new ConcurrencyConflictException("This item was updated by another admin. Your changes were not saved. Please reload and try again.");
             }
 
-            // Reload with category
-            var updatedItem = await _itemRepository.GetByIdAsync(id);
+            // Invalidate cache first, then reload to ensure fresh data is cached
             await InvalidateItemCachesAsync(id);
+            var updatedItem = await _itemRepository.GetByIdAsync(id);
 
             // Map to response DTO
             return _mapper.Map<ItemResponse>(updatedItem!, opts => opts.Items["StorageService"] = _storageService);

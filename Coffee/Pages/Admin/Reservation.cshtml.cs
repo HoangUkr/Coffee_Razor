@@ -48,10 +48,10 @@ namespace WebUI.Pages.Admin
         [BindProperty(SupportsGet = true)]
         public string? StatusFilter { get; set; }
 
-        [TempData]
+        [TempData(Key = "AdminSuccessMessage")]
         public string? SuccessMessage { get; set; }
 
-        [TempData]
+        [TempData(Key = "AdminErrorMessage")]
         public string? ErrorMessage { get; set; }
 
         public async Task OnGetAsync()

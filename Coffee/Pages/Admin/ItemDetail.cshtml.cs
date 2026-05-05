@@ -40,10 +40,10 @@ namespace WebUI.Pages.Admin
         public IEnumerable<ItemImageResponse> ItemImages { get; set; } = new List<ItemImageResponse>();
         public SelectList Categories { get; set; } = new SelectList(Enumerable.Empty<SelectListItem>());
 
-        [TempData]
+        [TempData(Key = "AdminSuccessMessage")]
         public string? SuccessMessage { get; set; }
 
-        [TempData]
+        [TempData(Key = "AdminErrorMessage")]
         public string? ErrorMessage { get; set; }
 
         [BindProperty]
@@ -135,12 +135,7 @@ namespace WebUI.Pages.Admin
             catch (ConcurrencyConflictException ex)
             {
                 ErrorMessage = ex.Message;
-                await LoadDataAsync();
-                if (Item != null)
-                {
-                    Input.Version = Item.Version;
-                }
-                return Page();
+                return RedirectToPage(new { Id });
             }
             catch (Exception ex)
             {

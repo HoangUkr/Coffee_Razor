@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Text.Json;
 using Application.Interfaces;
 using Microsoft.Extensions.Caching.Distributed;
@@ -19,14 +20,17 @@ namespace Infrastructure.Services
 
         public async Task<T?> GetAsync<T>(string key, CancellationToken cancellationToken = default)
         {
+            var sw = Stopwatch.StartNew();
             var cachedValue = await _distributedCache.GetStringAsync(key, cancellationToken);
+            sw.Stop();
+
             if (string.IsNullOrWhiteSpace(cachedValue))
             {
-                _logger.LogInformation("CACHE MISS | Backend: {CacheBackend} | Key: {CacheKey}", _distributedCache.GetType().Name, key);
+                _logger.LogInformation("CACHE MISS | Key: {CacheKey} | Elapsed: {ElapsedMs}ms", key, sw.ElapsedMilliseconds);
                 return default;
             }
 
-            _logger.LogInformation("CACHE HIT | Backend: {CacheBackend} | Key: {CacheKey}", _distributedCache.GetType().Name, key);
+            _logger.LogInformation("CACHE HIT  | Key: {CacheKey} | Elapsed: {ElapsedMs}ms", key, sw.ElapsedMilliseconds);
 
             return JsonSerializer.Deserialize<T>(cachedValue, SerializerOptions);
         }
@@ -39,8 +43,11 @@ namespace Infrastructure.Services
                 AbsoluteExpirationRelativeToNow = expiration
             };
 
+            var sw = Stopwatch.StartNew();
             await _distributedCache.SetStringAsync(key, serializedValue, options, cancellationToken);
-            _logger.LogInformation("CACHE SET | Backend: {CacheBackend} | Key: {CacheKey} | TTL: {TtlMinutes} minutes", _distributedCache.GetType().Name, key, expiration.TotalMinutes);
+            sw.Stop();
+
+            _logger.LogInformation("CACHE SET  | Key: {CacheKey} | TTL: {TtlMinutes}m | Elapsed: {ElapsedMs}ms", key, expiration.TotalMinutes, sw.ElapsedMilliseconds);
         }
 
         public Task RemoveAsync(string key, CancellationToken cancellationToken = default)

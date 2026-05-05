@@ -28,10 +28,10 @@ namespace WebUI.Pages.Admin
         [BindProperty(SupportsGet = true)]
         public string OrderCode { get; set; } = string.Empty;
 
-        [TempData]
+        [TempData(Key = "AdminSuccessMessage")]
         public string? SuccessMessage { get; set; }
 
-        [TempData]
+        [TempData(Key = "AdminErrorMessage")]
         public string? ErrorMessage { get; set; }
 
         public async Task<IActionResult> OnGetAsync()

@@ -1,0 +1,239 @@
+@page
+@model WebUI.Pages.Admin.Settings.ScheduleModel
+@{
+    ViewData["Title"] = "Working Hours & Dates";
+    Layout = "~/Pages/Shared/_LayoutAdmin.cshtml";
+}
+
+<main id="content" class="content py-10">
+    <div class="container-fluid">
+
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="fs-3 mb-1">Working Hours &amp; Dates</h1>
+                        <p class="mb-0 text-muted">Manage weekly schedule and holidays</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(Model.SuccessMessage))
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="ti ti-check me-2"></i>@Model.SuccessMessage
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+        @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+        {
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="ti ti-alert-circle me-2"></i>@Model.ErrorMessage
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+
+        <div class="row g-4">
+
+            <!-- ── Weekly Schedule ─────────────────────────────────────── -->
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">
+                            <i class="ti ti-calendar-week me-2"></i>Weekly Schedule
+                        </h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <form method="post" asp-page-handler="SaveSchedule">
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th class="ps-4">Day</th>
+                                            <th>Open</th>
+                                            <th>Close</th>
+                                            <th class="text-center">Closed</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @for (int i = 0; i < Model.Schedule.Count; i++)
+                                        {
+                                            var rowId = $"row-{i}";
+                                            var isClosed = Model.Schedule[i].IsClosed;
+                                            <tr id="@rowId">
+                                                <input type="hidden" name="Schedule[@i].Day" value="@((int)Model.Schedule[i].Day)" />
+                                                <td class="ps-4 align-middle fw-semibold">@Model.Schedule[i].Day</td>
+                                                <td class="align-middle" style="width:160px;">
+                                                    <input type="time" class="form-control form-control-sm time-input @(isClosed ? "opacity-50" : "")"
+                                                           name="Schedule[@i].OpenTime"
+                                                           value="@Model.Schedule[i].OpenTime"
+                                                           @(isClosed ? "readonly" : "") />
+                                                </td>
+                                                <td class="align-middle" style="width:160px;">
+                                                    <input type="time" class="form-control form-control-sm time-input @(isClosed ? "opacity-50" : "")"
+                                                           name="Schedule[@i].CloseTime"
+                                                           value="@Model.Schedule[i].CloseTime"
+                                                           @(isClosed ? "readonly" : "") />
+                                                </td>
+                                                <td class="text-center align-middle">
+                                                    <div class="form-check form-switch d-flex justify-content-center mb-0">
+                                                        @* Hidden false ensures unchecked checkbox still binds as false *@
+                                                        <input type="hidden" name="Schedule[@i].IsClosed" value="false" />
+                                                        <input class="form-check-input closed-toggle" type="checkbox" role="switch"
+                                                               name="Schedule[@i].IsClosed"
+                                                               value="true"
+                                                               data-row="@rowId"
+                                                               @(isClosed ? "checked" : "") />
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="card-footer d-flex justify-content-end">
+                                <button type="submit" class="btn btn-primary px-4">
+                                    <i class="ti ti-device-floppy me-2"></i>Save Schedule
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Holidays ────────────────────────────────────────────── -->
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">
+                            <i class="ti ti-calendar-off me-2"></i>Holidays &amp; Days Off
+                        </h5>
+                        <button class="btn btn-sm btn-primary" type="button"
+                                data-bs-toggle="collapse" data-bs-target="#addHolidayForm" aria-expanded="false">
+                            <i class="ti ti-plus me-1"></i>Add Holiday
+                        </button>
+                    </div>
+
+                    <!-- Add Holiday form (collapsed by default) -->
+                    <div class="collapse" id="addHolidayForm">
+                        <div class="card-body border-bottom">
+                            <form method="post" asp-page-handler="AddHoliday">
+                                <div class="row g-3 align-items-end">
+                                    <div class="col-md-3">
+                                        <label class="form-label">Date</label>
+                                        <input type="date" class="form-control" name="NewHoliday.Date"
+                                               min="@DateTime.Today.ToString("yyyy-MM-dd")"
+                                               required />
+                                        <span asp-validation-for="NewHoliday.Date" class="text-danger small"></span>
+                                    </div>
+                                    <div class="col-md-5">
+                                        <label class="form-label">Name</label>
+                                        <input type="text" class="form-control" name="NewHoliday.Name"
+                                               placeholder="e.g. Christmas Day" maxlength="100" required />
+                                        <span asp-validation-for="NewHoliday.Name" class="text-danger small"></span>
+                                    </div>
+                                    <div class="col-md-2 d-flex align-items-center gap-2 pt-4">
+                                        <div class="form-check form-switch mb-0">
+                                            <input class="form-check-input" type="checkbox" role="switch"
+                                                   name="NewHoliday.IsRecurring" value="true" id="isRecurring" />
+                                            <label class="form-check-label" for="isRecurring">Recurring</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <button type="submit" class="btn btn-success w-100">
+                                            <i class="ti ti-plus me-1"></i>Add
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Holiday list -->
+                    @if (!Model.Holidays.Any())
+                    {
+                        <div class="card-body text-center text-muted py-5">
+                            <i class="ti ti-calendar-off fs-1 d-block mb-2 opacity-25"></i>
+                            No holidays added yet. Click <strong>Add Holiday</strong> to get started.
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="ps-4">Date</th>
+                                        <th>Name</th>
+                                        <th class="text-center">Recurring</th>
+                                        <th class="text-end pe-4">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var holiday in Model.Holidays)
+                                    {
+                                        var isPast = holiday.Date < DateOnly.FromDateTime(DateTime.Today) && !holiday.IsRecurring;
+                                        <tr class="@(isPast ? "opacity-50" : "")">
+                                            <td class="ps-4 align-middle">
+                                                @holiday.Date.ToString("dd MMM yyyy")
+                                                @if (holiday.Date == DateOnly.FromDateTime(DateTime.Today))
+                                                {
+                                                    <span class="badge bg-warning text-dark ms-2">Today</span>
+                                                }
+                                                else if (isPast)
+                                                {
+                                                    <span class="badge bg-secondary ms-2">Past</span>
+                                                }
+                                            </td>
+                                            <td class="align-middle fw-semibold">@holiday.Name</td>
+                                            <td class="text-center align-middle">
+                                                @if (holiday.IsRecurring)
+                                                {
+                                                    <span class="badge bg-info-subtle text-info">
+                                                        <i class="ti ti-repeat me-1"></i>Yearly
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted small">Once</span>
+                                                }
+                                            </td>
+                                            <td class="text-end pe-4 align-middle">
+                                                <form method="post" asp-page-handler="DeleteHoliday"
+                                                      onsubmit="return confirm('Remove holiday \'@holiday.Name\'?');"
+                                                      class="d-inline">
+                                                    <input type="hidden" name="id" value="@holiday.Id" />
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                        <i class="ti ti-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+            </div>
+
+        </div>
+    </div>
+</main>
+
+@section Scripts {
+    <script>
+        // Toggle time inputs readonly state when "Closed" switch changes
+        document.querySelectorAll('.closed-toggle').forEach(toggle => {
+            toggle.addEventListener('change', function () {
+                const row = document.getElementById(this.dataset.row);
+                row.querySelectorAll('.time-input').forEach(input => {
+                    input.readOnly = this.checked;
+                    input.classList.toggle('opacity-50', this.checked);
+                });
+            });
+        });
+    </script>
+}

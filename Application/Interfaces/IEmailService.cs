@@ -1,8 +1,10 @@
+using Application.DTOs.Email;
+
 namespace Application.Interfaces
 {
     public interface IEmailService
     {
-        Task SendReservationConfirmationAsync(string toEmail, string customerName, DateTime reservationDate, string reservationTime, int numberOfGuests);
-        Task SendReservationCancellationAsync(string toEmail, string customerName, DateTime reservationDate, string reservationTime);
+        Task SendOrderConfirmationAsync(OrderConfirmationEmail email, CancellationToken ct = default);
+        Task SendReservationConfirmationAsync(ReservationConfirmationEmail email, CancellationToken ct = default);
     }
 }

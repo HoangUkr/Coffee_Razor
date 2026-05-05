@@ -89,17 +89,21 @@ namespace WebUI.Pages
 
             CalculateTotals();
 
-            // Validate delivery address for out-house delivery orders
-            if (Input.FulfillmentScope == OrderFulfillmentScope.OutHouse &&
-                Input.OutHouseFulfillmentType == Domain.Enums.OutHouseFulfillmentType.Delivery &&
+            // Customer orders are always OutHouse — hardcoded, not user-selectable
+            // InHouse is reserved for admin/staff only via Admin/CreateOrder
+            Input.FulfillmentScope = OrderFulfillmentScope.OutHouse;
+
+            // Validate pickup or delivery was selected
+            if (!Input.OutHouseFulfillmentType.HasValue)
+            {
+                ModelState.AddModelError("Input.OutHouseFulfillmentType", "Please choose pickup or delivery.");
+            }
+
+            // Validate delivery address when delivery is selected
+            if (Input.OutHouseFulfillmentType == Domain.Enums.OutHouseFulfillmentType.Delivery &&
                 string.IsNullOrWhiteSpace(Input.Address))
             {
                 ModelState.AddModelError("Input.Address", "Delivery address is required for delivery orders.");
-            }
-
-            if (Input.FulfillmentScope == OrderFulfillmentScope.OutHouse && !Input.OutHouseFulfillmentType.HasValue)
-            {
-                ModelState.AddModelError("Input.OutHouseFulfillmentType", "Please choose pickup or delivery for out-house orders.");
             }
 
             if (!ModelState.IsValid)
@@ -195,11 +199,12 @@ namespace WebUI.Pages
         [Display(Name = "Phone Number")]
         public string Phone { get; set; } = string.Empty;
 
-        [Display(Name = "Fulfillment Scope")]
+        // Always OutHouse for customer orders — not exposed in the UI
+        // InHouse is reserved for admin/staff via Admin/CreateOrder
         public OrderFulfillmentScope FulfillmentScope { get; set; } = OrderFulfillmentScope.OutHouse;
 
-        [Display(Name = "Out-House Fulfillment Type")]
-        public OutHouseFulfillmentType? OutHouseFulfillmentType { get; set; } = Domain.Enums.OutHouseFulfillmentType.Pickup;
+        [Display(Name = "Fulfillment Type")]
+        public OutHouseFulfillmentType? OutHouseFulfillmentType { get; set; }
 
         [StringLength(500)]
         [Display(Name = "Delivery Address")]

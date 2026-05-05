@@ -25,6 +25,9 @@ namespace Infrastructure.Data
         public DbSet<Reservation> Reservations { get; set; }
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<UserNotification> UserNotifications { get; set; }
+        public DbSet<SystemSetting> SystemSettings { get; set; }
+        public DbSet<WorkingSchedule> WorkingSchedules { get; set; }
+        public DbSet<Holiday> Holidays { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -310,6 +313,89 @@ namespace Infrastructure.Data
                     .HasForeignKey(un => un.UserId)
                     .OnDelete(DeleteBehavior.Cascade);
             });
+
+            modelBuilder.Entity<SystemSetting>(entity =>
+            {
+                entity.HasKey(s => s.Key);
+
+                entity.Property(s => s.Key)
+                    .IsRequired()
+                    .HasMaxLength(100);
+
+                entity.Property(s => s.Value)
+                    .IsRequired()
+                    .HasMaxLength(500);
+
+                entity.Property(s => s.UpdatedAt)
+                    .IsRequired();
+
+                // Seed default values so the system works on first run
+                entity.HasData(
+                    new { Key = "WorkingHours.Open",             Value = "08:00",                    UpdatedAt = new DateTimeOffset(2025, 1, 1, 0, 0, 0, TimeSpan.Zero) },
+                    new { Key = "WorkingHours.Close",            Value = "22:00",                    UpdatedAt = new DateTimeOffset(2025, 1, 1, 0, 0, 0, TimeSpan.Zero) },
+                    new { Key = "Contact.Email",                 Value = "",                         UpdatedAt = new DateTimeOffset(2025, 1, 1, 0, 0, 0, TimeSpan.Zero) },
+                    new { Key = "Contact.Facebook",              Value = "",                         UpdatedAt = new DateTimeOffset(2025, 1, 1, 0, 0, 0, TimeSpan.Zero) },
+                    new { Key = "Contact.Instagram",             Value = "",                         UpdatedAt = new DateTimeOffset(2025, 1, 1, 0, 0, 0, TimeSpan.Zero) },
+                    new { Key = "Contact.Twitter",               Value = "",                         UpdatedAt = new DateTimeOffset(2025, 1, 1, 0, 0, 0, TimeSpan.Zero) },
+                    new { Key = "Email.ConfirmationEnabled",     Value = "True",                     UpdatedAt = new DateTimeOffset(2025, 1, 1, 0, 0, 0, TimeSpan.Zero) },
+                    new { Key = "Notification.ShowCount",        Value = "True",                     UpdatedAt = new DateTimeOffset(2025, 1, 1, 0, 0, 0, TimeSpan.Zero) }
+                );
+            });
+
+            modelBuilder.Entity<WorkingSchedule>(entity =>
+            {
+                entity.HasKey(w => w.Day);
+
+                entity.Property(w => w.Day)
+                    .IsRequired()
+                    .HasConversion<int>();
+
+                entity.Property(w => w.OpenTime)
+                    .IsRequired()
+                    .HasConversion(
+                        t => t.ToString("HH:mm"),
+                        s => TimeOnly.Parse(s))
+                    .HasMaxLength(5);
+
+                entity.Property(w => w.CloseTime)
+                    .IsRequired()
+                    .HasConversion(
+                        t => t.ToString("HH:mm"),
+                        s => TimeOnly.Parse(s))
+                    .HasMaxLength(5);
+
+                entity.Property(w => w.IsClosed)
+                    .IsRequired()
+                    .HasDefaultValue(false);
+
+                // Seed all 7 days with sensible defaults
+                entity.HasData(
+                    new WorkingSchedule(DayOfWeek.Monday,    new TimeOnly(8,  0), new TimeOnly(22, 0)),
+                    new WorkingSchedule(DayOfWeek.Tuesday,   new TimeOnly(8,  0), new TimeOnly(22, 0)),
+                    new WorkingSchedule(DayOfWeek.Wednesday, new TimeOnly(8,  0), new TimeOnly(22, 0)),
+                    new WorkingSchedule(DayOfWeek.Thursday,  new TimeOnly(8,  0), new TimeOnly(22, 0)),
+                    new WorkingSchedule(DayOfWeek.Friday,    new TimeOnly(8,  0), new TimeOnly(22, 0)),
+                    new WorkingSchedule(DayOfWeek.Saturday,  new TimeOnly(9,  0), new TimeOnly(21, 0)),
+                    new WorkingSchedule(DayOfWeek.Sunday,    new TimeOnly(9,  0), new TimeOnly(20, 0))
+                );
+            });
+
+            modelBuilder.Entity<Holiday>(entity =>
+            {
+                entity.HasKey(h => h.Id);
+                entity.Property(h => h.Date).IsRequired().HasConversion<DateOnlyConverter>().HasColumnType("date");
+                entity.Property(h => h.Name).IsRequired().HasMaxLength(100);
+                entity.Property(h => h.IsRecurring).IsRequired().HasDefaultValue(false);
+                entity.Property(h => h.IsActive).IsRequired().HasDefaultValue(true);
+                entity.HasIndex(h => new { h.Date, h.IsActive });
+            });
         }
+    }
+
+    // EF Core 8 value converter for DateOnly ↔ DateTime (SQL date column)
+    public class DateOnlyConverter : Microsoft.EntityFrameworkCore.Storage.ValueConversion.ValueConverter<DateOnly, DateTime>
+    {
+        public DateOnlyConverter()
+            : base(d => d.ToDateTime(TimeOnly.MinValue), dt => DateOnly.FromDateTime(dt)) { }
     }
 }

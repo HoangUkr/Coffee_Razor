@@ -32,10 +32,10 @@ namespace WebUI.Pages.Admin
         public List<ItemResponse> AvailableItems { get; set; } = new();
         public List<ItemCategoryFilterModel> AvailableCategories { get; set; } = new();
 
-        [TempData]
+        [TempData(Key = "AdminSuccessMessage")]
         public string? SuccessMessage { get; set; }
 
-        [TempData]
+        [TempData(Key = "AdminErrorMessage")]
         public string? ErrorMessage { get; set; }
 
         public async Task OnGetAsync()

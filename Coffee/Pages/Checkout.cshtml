@@ -73,30 +73,14 @@
                         <div class="w-100"></div>
                         <div class="col-md-12">
                             <div class="form-group">
-                                <label asp-for="Input.FulfillmentScope">Fulfillment Scope *</label>
+                                <label>Fulfillment Type *</label>
                                 <div class="d-flex">
                                     <label class="mr-4">
-                                        <input type="radio" asp-for="Input.FulfillmentScope" value="0" class="mr-2" onchange="toggleFulfillmentFields()">
-                                        In House
-                                    </label>
-                                    <label>
-                                        <input type="radio" asp-for="Input.FulfillmentScope" value="1" class="mr-2" onchange="toggleFulfillmentFields()">
-                                        Out House
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="w-100"></div>
-                        <div class="col-md-12" id="outHouseFulfillmentSection" style="display:none;">
-                            <div class="form-group">
-                                <label asp-for="Input.OutHouseFulfillmentType">Out-House Fulfillment Type *</label>
-                                <div class="d-flex">
-                                    <label class="mr-4">
-                                        <input type="radio" asp-for="Input.OutHouseFulfillmentType" value="0" class="mr-2" onchange="toggleFulfillmentFields()">
+                                        <input type="radio" asp-for="Input.OutHouseFulfillmentType" value="0" class="mr-2" onchange="toggleAddressField()">
                                         Pickup
                                     </label>
                                     <label>
-                                        <input type="radio" asp-for="Input.OutHouseFulfillmentType" value="1" class="mr-2" onchange="toggleFulfillmentFields()">
+                                        <input type="radio" asp-for="Input.OutHouseFulfillmentType" value="1" class="mr-2" onchange="toggleAddressField()">
                                         Delivery
                                     </label>
                                 </div>
@@ -176,25 +160,12 @@
     <partial name="_ValidationScriptsPartial" />
 
     <script>
-        function toggleFulfillmentFields() {
-            const outHouseRadio = document.querySelector('input[name="Input.FulfillmentScope"][value="1"]');
+        function toggleAddressField() {
             const deliveryRadio = document.querySelector('input[name="Input.OutHouseFulfillmentType"][value="1"]');
-            const outHouseFulfillmentSection = document.getElementById('outHouseFulfillmentSection');
             const addressField = document.getElementById('addressField');
-
-            const isOutHouse = outHouseRadio && outHouseRadio.checked;
-            const isDelivery = deliveryRadio && deliveryRadio.checked;
-
-            outHouseFulfillmentSection.style.display = isOutHouse ? 'block' : 'none';
-
-            if (isOutHouse && isDelivery) {
-                addressField.style.display = 'block';
-            } else {
-                addressField.style.display = 'none';
-            }
+            addressField.style.display = deliveryRadio && deliveryRadio.checked ? 'block' : 'none';
         }
 
-        // Initialize on page load
-        document.addEventListener('DOMContentLoaded', toggleFulfillmentFields);
+        document.addEventListener('DOMContentLoaded', toggleAddressField);
     </script>
 }

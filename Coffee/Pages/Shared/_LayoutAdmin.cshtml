@@ -1,4 +1,10 @@
-﻿<!DOCTYPE html>
+﻿@using Application.Interfaces
+@inject ISystemSettingService SystemSettingService
+@{
+    var appSettings = await SystemSettingService.GetAppSettingsAsync();
+    var showNotificationCount = appSettings.ShowNotificationCount;
+}
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -72,9 +78,50 @@
             </div>
           </div>
         </li>
+
+        <!-- User icon -->
+        <li class="dropdown">
+          <a class="btn-icon btn-sm btn-light btn rounded-circle d-flex align-items-center justify-content-center"
+             href="#" role="button" title="Account" id="userMenuButton">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+              <circle cx="12" cy="7" r="4" />
+              <path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
+            </svg>
+          </a>
+          <div class="dropdown-menu dropdown-menu-end p-0" id="userMenuDropdown" style="min-width: 200px;">
+            <div class="px-3 py-2 border-bottom d-flex align-items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+                   class="text-muted flex-shrink-0">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                <circle cx="12" cy="7" r="4" />
+                <path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
+              </svg>
+              <div>
+                <div class="fw-semibold small">@(User.Identity?.Name ?? "Admin")</div>
+                <div class="text-muted" style="font-size: 0.75rem;">Administrator</div>
+              </div>
+            </div>
+            <div class="p-2">
+              <form method="post" asp-page="/Admin/Login" asp-page-handler="Logout" class="m-0">
+                <button type="submit" class="dropdown-item rounded d-flex align-items-center gap-2 text-danger">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                       stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                    <path d="M14 8v-2a2 2 0 0 0 -2 -2h-7a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h7a2 2 0 0 0 2 -2v-2" />
+                    <path d="M9 12h12l-3 -3m0 6l3 -3" />
+                  </svg>
+                  Log out
+                </button>
+              </form>
+            </div>
+          </div>
+        </li>
+
       </ul>
     </div>
-
   </nav>
 
   <!-- SIDEBAR -->
@@ -99,6 +146,40 @@
       <li><a class="nav-link" asp-page="/Admin/Orders"><i class="ti ti-shopping-cart"></i><span
             class="nav-text">Orders</span></a></li>
       <li class="px-4 pt-4 pb-2"><small class="nav-text">Account</small></li>
+
+      <!-- Settings (collapsible) -->
+      @{
+          var isSettingsActive = Context.Request.Path.StartsWithSegments("/Admin/Settings");
+      }
+      <li>
+        <a class="nav-link @(isSettingsActive ? "active" : "")"
+           data-bs-toggle="collapse" href="#settingsSubmenu"
+           role="button" aria-expanded="@(isSettingsActive ? "true" : "false")"
+           aria-controls="settingsSubmenu">
+          <i class="ti ti-settings"></i>
+          <span class="nav-text">Settings</span>
+          <i class="ti ti-chevron-down ms-auto nav-text" style="font-size:.75rem;"></i>
+        </a>
+        <div class="collapse @(isSettingsActive ? "show" : "")" id="settingsSubmenu">
+          <ul class="list-unstyled ps-4 mb-0">
+            <li>
+              <a class="nav-link nav-link-sub @(Context.Request.Path.StartsWithSegments("/Admin/Settings/Schedule") ? "active" : "")"
+                 asp-page="/Admin/Settings/Schedule">
+                <i class="ti ti-calendar-week"></i>
+                <span class="nav-text">Working Hours &amp; Dates</span>
+              </a>
+            </li>
+            <li>
+              <a class="nav-link nav-link-sub @(Context.Request.Path.StartsWithSegments("/Admin/Settings/Others") ? "active" : "")"
+                 asp-page="/Admin/Settings/Others">
+                <i class="ti ti-sliders"></i>
+                <span class="nav-text">Others</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </li>
+
       <li>
         <form method="post" asp-page="/Admin/Login" asp-page-handler="Logout" class="m-0">
           <button type="submit" class="nav-link border-0 bg-transparent w-100 text-start">
@@ -135,6 +216,15 @@
       const loadingIndicator = document.getElementById('notificationLoading');
       const bellButton = document.getElementById('notificationBellButton');
       const notificationDropdown = bellButton ? bootstrap.Dropdown.getOrCreateInstance(bellButton) : null;
+
+      const userMenuButton = document.getElementById('userMenuButton');
+      const userMenuDropdown = userMenuButton ? bootstrap.Dropdown.getOrCreateInstance(userMenuButton) : null;
+
+      userMenuButton?.addEventListener('click', (event) => {
+        event.preventDefault();
+        notificationDropdown?.hide();   // close bell first
+        userMenuDropdown?.toggle();
+      });
 
       let todayLoaded = false;
       let pastPageNumber = 1;
@@ -178,6 +268,10 @@
       }
 
       async function refreshUnreadCount() {
+        if (!@Json.Serialize(showNotificationCount)) {
+          badge.style.display = 'none';
+          return;
+        }
         const response = await fetch('/admin/notifications/unread-count');
         if (!response.ok) {
           return;
@@ -261,6 +355,7 @@
 
       bellButton?.addEventListener('click', async (event) => {
         event.preventDefault();
+        userMenuDropdown?.hide();       // close user menu first
         notificationDropdown?.toggle();
         await loadTodayNotifications();
       });

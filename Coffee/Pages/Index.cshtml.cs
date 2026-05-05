@@ -1,5 +1,6 @@
 using Application.DTOs.Item;
 using Application.DTOs.Reservation;
+using Application.DTOs.Settings;
 using Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -11,19 +12,33 @@ namespace WebUI.Pages
     {
         private readonly IItemService _itemService;
         private readonly IReservationService _reservationService;
+        private readonly ISystemSettingService _settingService;
+        private readonly IWorkingScheduleService _scheduleService;
+        private readonly IHolidayService _holidayService;
         private readonly ILogger<IndexModel> _logger;
 
         public IndexModel(
             IItemService itemService,
             IReservationService reservationService,
+            ISystemSettingService settingService,
+            IWorkingScheduleService scheduleService,
+            IHolidayService holidayService,
             ILogger<IndexModel> logger)
         {
-            _itemService = itemService;
+            _itemService        = itemService;
             _reservationService = reservationService;
-            _logger = logger;
+            _settingService     = settingService;
+            _scheduleService    = scheduleService;
+            _holidayService     = holidayService;
+            _logger             = logger;
         }
 
         public List<ItemWithImageResponse> BestSellers { get; set; } = new();
+        public AppSettings Settings { get; set; } = new();
+        public IReadOnlyList<WorkingScheduleEntry> Schedule { get; set; } = Array.Empty<WorkingScheduleEntry>();
+
+        /// <summary>Null = open; otherwise the display label e.g. "Closed – Christmas Day"</summary>
+        public string? TodayClosedReason { get; set; }
 
         [TempData]
         public string? SuccessMessage { get; set; }
@@ -31,23 +46,32 @@ namespace WebUI.Pages
         [TempData]
         public string? ErrorMessage { get; set; }
 
-        // ViewData property for inline errors (when returning Page())
         public string? InlineErrorMessage { get; set; }
 
         public async Task OnGetAsync()
         {
-            // Get all active items
             var items = await _itemService.GetAllActiveAsync();
-
-            // Take first 4 items as best sellers
             BestSellers = items.Take(4).Select(item => new ItemWithImageResponse
             {
-                Id = item.Id,
-                Name = item.Name,
-                Price = item.Price,
-                CategoryName = item.CategoryName,
+                Id              = item.Id,
+                Name            = item.Name,
+                Price           = item.Price,
+                CategoryName    = item.CategoryName,
                 DefaultImageUrl = string.IsNullOrEmpty(item.ImageUrl) ? "~/images/menu-1.jpg" : item.ImageUrl
             }).ToList();
+
+            Settings = await _settingService.GetAppSettingsAsync();
+            Schedule = await _scheduleService.GetScheduleAsync();
+
+            // Holiday overrides weekly schedule
+            var today   = DateOnly.FromDateTime(DateTime.Today);
+            var holiday = await _holidayService.GetHolidayForDateAsync(today);
+            if (holiday is not null)
+            {
+                TodayClosedReason = holiday.IsRecurring
+                    ? $"Closed – {holiday.Name}"
+                    : $"Closed for {holiday.Name}";
+            }
         }
 
         public async Task<IActionResult> OnPostBookTableAsync(

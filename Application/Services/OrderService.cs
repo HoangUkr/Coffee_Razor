@@ -1,12 +1,14 @@
-﻿using Application.Repositories;
-using Application.Exceptions;
-using Application.Interfaces;
+﻿using Application.DTOs.Email;
 using Application.DTOs.Order;
 using Application.DTOs.Common;
+using Application.Exceptions;
+using Application.Interfaces;
+using Application.Repositories;
+using AutoMapper;
 using Domain.Entities;
 using Domain.Enums;
-using AutoMapper;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace Application.Services
 {
@@ -17,19 +19,28 @@ namespace Application.Services
         private readonly ICustomerRepository _customerRepository;
         private readonly IMapper _mapper;
         private readonly IStorageService _storageService;
+        private readonly IEmailService _emailService;
+        private readonly ISystemSettingService _settingService;
+        private readonly ILogger<OrderService> _logger;
 
         public OrderService(
             IOrderRepository orderRepository,
             IItemRepository itemRepository,
             ICustomerRepository customerRepository,
             IMapper mapper,
-            IStorageService storageService)
+            IStorageService storageService,
+            IEmailService emailService,
+            ISystemSettingService settingService,
+            ILogger<OrderService> logger)
         {
-            _orderRepository = orderRepository ?? throw new ArgumentNullException(nameof(orderRepository));
-            _itemRepository = itemRepository ?? throw new ArgumentNullException(nameof(itemRepository));
+            _orderRepository    = orderRepository    ?? throw new ArgumentNullException(nameof(orderRepository));
+            _itemRepository     = itemRepository     ?? throw new ArgumentNullException(nameof(itemRepository));
             _customerRepository = customerRepository ?? throw new ArgumentNullException(nameof(customerRepository));
-            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
-            _storageService = storageService ?? throw new ArgumentNullException(nameof(storageService));
+            _mapper             = mapper             ?? throw new ArgumentNullException(nameof(mapper));
+            _storageService     = storageService     ?? throw new ArgumentNullException(nameof(storageService));
+            _emailService       = emailService       ?? throw new ArgumentNullException(nameof(emailService));
+            _settingService     = settingService     ?? throw new ArgumentNullException(nameof(settingService));
+            _logger             = logger             ?? throw new ArgumentNullException(nameof(logger));
         }
 
         public async Task<OrderDetailResponse> PlaceOrderAsync(PlaceOrderRequest request, Guid userId)
@@ -95,7 +106,42 @@ namespace Application.Services
             var orderWithDetails = await _orderRepository.GetByIdWithDetailsAsync(createdOrder.Id);
 
             // Map to response DTO with StorageService for dynamic SAS URLs
-            return _mapper.Map<OrderDetailResponse>(orderWithDetails!, opts => opts.Items["StorageService"] = _storageService);
+            var response = _mapper.Map<OrderDetailResponse>(orderWithDetails!, opts => opts.Items["StorageService"] = _storageService);
+
+            // Send confirmation email to the customer (user-placed orders only)
+            // Admin-created orders use CreateOrderManuallyAsync which does NOT call this
+            if (!string.IsNullOrWhiteSpace(request.Email))
+            {
+                var settings = await _settingService.GetAppSettingsAsync();
+                if (settings.EmailConfirmationEnabled)
+                {
+                    try
+                    {
+                        var emailDto = new OrderConfirmationEmail
+                        {
+                            ToEmail             = request.Email,
+                            CustomerName        = $"{request.FirstName} {request.LastName}".Trim(),
+                            OrderCode           = response.OrderCode,
+                            TotalPrice          = response.TotalPrice,
+                            FulfillmentDescription = BuildFulfillmentDescription(request.FulfillmentScope, request.OutHouseFulfillmentType),
+                            DeliveryAddress     = request.DeliveryAddress,
+                            Notes               = request.Notes,
+                            CreatedDate         = response.CreatedDate,
+                            Items               = response.Items.Select(i => new OrderItemEmailLine(
+                                                    i.ItemName, i.Quantity, i.UnitPrice, i.TotalPrice)).ToList()
+                        };
+
+                        await _emailService.SendOrderConfirmationAsync(emailDto);
+                    }
+                    catch (Exception ex)
+                    {
+                        // Email failure must never roll back the order
+                        _logger.LogError(ex, "Failed to send order confirmation email for order {OrderCode}", response.OrderCode);
+                    }
+                }
+            }
+
+            return response;
         }
 
         public async Task<OrderDetailResponse?> GetOrderDetailsAsync(int orderId)
@@ -283,6 +329,19 @@ namespace Application.Services
             return new string(Enumerable.Repeat(chars, 5)
                 .Select(s => s[random.Next(s.Length)]).ToArray());
         }
+
+        private static string BuildFulfillmentDescription(OrderFulfillmentScope scope, OutHouseFulfillmentType? outHouseType)
+            => scope switch
+            {
+                OrderFulfillmentScope.InHouse => "In House",
+                OrderFulfillmentScope.OutHouse => outHouseType switch
+                {
+                    OutHouseFulfillmentType.Pickup   => "Out House — Pickup",
+                    OutHouseFulfillmentType.Delivery => "Out House — Delivery",
+                    _                                => "Out House"
+                },
+                _ => scope.ToString()
+            };
 
         public async Task<OrderDetailResponse> UpdateOrderStatusAsync(int orderId, OrderStatus newStatus, int version)
         {

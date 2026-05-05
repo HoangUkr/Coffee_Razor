@@ -1,4 +1,5 @@
 using Application.DTOs.Common;
+using Application.DTOs.Email;
 using Application.DTOs.Reservation;
 using Application.Exceptions;
 using Application.Interfaces;
@@ -14,19 +15,22 @@ namespace Application.Services
     {
         private readonly IReservationRepository _repository;
         private readonly IEmailService _emailService;
+        private readonly ISystemSettingService _settingService;
         private readonly IMapper _mapper;
         private readonly ILogger<ReservationService> _logger;
 
         public ReservationService(
             IReservationRepository repository,
             IEmailService emailService,
+            ISystemSettingService settingService,
             IMapper mapper,
             ILogger<ReservationService> logger)
         {
-            _repository = repository;
-            _emailService = emailService;
-            _mapper = mapper;
-            _logger = logger;
+            _repository     = repository;
+            _emailService   = emailService;
+            _settingService = settingService;
+            _mapper         = mapper;
+            _logger         = logger;
         }
 
         public async Task<ReservationResponse> CreateAsync(CreateReservationRequest request)
@@ -64,23 +68,34 @@ namespace Application.Services
             // Save to database
             var createdReservation = await _repository.CreateAsync(reservation);
 
-            // Send confirmation email if email is provided
+            // Send confirmation email if customer provided an email address (user-placed reservations only)
+            // Admin actions (confirm/cancel/complete) do not go through this path
             if (!string.IsNullOrWhiteSpace(createdReservation.Email))
             {
-                try
+                var settings = await _settingService.GetAppSettingsAsync();
+                if (settings.EmailConfirmationEnabled)
                 {
-                    await _emailService.SendReservationConfirmationAsync(
-                        createdReservation.Email,
-                        createdReservation.CustomerName,
-                        createdReservation.ReservationDate,
-                        createdReservation.ReservationTime,
-                        createdReservation.NumberOfGuests
-                    );
-                }
-                catch (Exception ex)
-                {
-                    // Log email error but don't fail the reservation
-                    _logger.LogError(ex, "Failed to send confirmation email for reservation {ReservationId}", createdReservation.Id);
+                    try
+                    {
+                        var emailDto = new ReservationConfirmationEmail
+                        {
+                            ToEmail         = createdReservation.Email,
+                            CustomerName    = createdReservation.CustomerName,
+                            PhoneNumber     = createdReservation.PhoneNumber,
+                            ReservationId   = createdReservation.Id,
+                            ReservationDate = createdReservation.ReservationDate,
+                            ReservationTime = createdReservation.ReservationTime,
+                            NumberOfGuests  = createdReservation.NumberOfGuests,
+                            SpecialRequests = createdReservation.SpecialRequests
+                        };
+
+                        await _emailService.SendReservationConfirmationAsync(emailDto);
+                    }
+                    catch (Exception ex)
+                    {
+                        // Email failure must never roll back the reservation
+                        _logger.LogError(ex, "Failed to send confirmation email for reservation {ReservationId}", createdReservation.Id);
+                    }
                 }
             }
 
@@ -200,23 +215,7 @@ namespace Application.Services
             reservation.IncrementVersion();
             var updated = await _repository.UpdateAsync(reservation, reservation.Version - 1);
 
-            // Send cancellation email if email is provided
-            if (!string.IsNullOrWhiteSpace(reservation.Email))
-            {
-                try
-                {
-                    await _emailService.SendReservationCancellationAsync(
-                        reservation.Email,
-                        reservation.CustomerName,
-                        reservation.ReservationDate,
-                        reservation.ReservationTime
-                    );
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to send cancellation email for reservation {ReservationId}", reservation.Id);
-                }
-            }
+            // No email sent on cancellation — this action is performed by admin/staff only
 
             return _mapper.Map<ReservationResponse>(updated);
         }

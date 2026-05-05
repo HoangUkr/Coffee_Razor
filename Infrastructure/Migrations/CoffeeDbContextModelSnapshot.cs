@@ -98,6 +98,39 @@ namespace Infrastructure.Migrations
                     b.ToTable("Customers");
                 });
 
+            modelBuilder.Entity("Domain.Entities.Holiday", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("IsRecurring")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Date", "IsActive");
+
+                    b.ToTable("Holidays");
+                });
+
             modelBuilder.Entity("Domain.Entities.Item", b =>
                 {
                     b.Property<int>("Id")
@@ -241,9 +274,6 @@ namespace Infrastructure.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
 
-                    b.Property<int?>("OutHouseFulfillmentType")
-                        .HasColumnType("int");
-
                     b.Property<string>("Notes")
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
@@ -253,6 +283,9 @@ namespace Infrastructure.Migrations
                         .HasMaxLength(5)
                         .HasColumnType("char(5)")
                         .IsFixedLength();
+
+                    b.Property<int?>("OutHouseFulfillmentType")
+                        .HasColumnType("int");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
@@ -372,6 +405,75 @@ namespace Infrastructure.Migrations
                     b.ToTable("Reservations");
                 });
 
+            modelBuilder.Entity("Domain.Entities.SystemSetting", b =>
+                {
+                    b.Property<string>("Key")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.HasKey("Key");
+
+                    b.ToTable("SystemSettings");
+
+                    b.HasData(
+                        new
+                        {
+                            Key = "WorkingHours.Open",
+                            UpdatedAt = new DateTimeOffset(new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Value = "08:00"
+                        },
+                        new
+                        {
+                            Key = "WorkingHours.Close",
+                            UpdatedAt = new DateTimeOffset(new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Value = "22:00"
+                        },
+                        new
+                        {
+                            Key = "Contact.Email",
+                            UpdatedAt = new DateTimeOffset(new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Value = ""
+                        },
+                        new
+                        {
+                            Key = "Contact.Facebook",
+                            UpdatedAt = new DateTimeOffset(new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Value = ""
+                        },
+                        new
+                        {
+                            Key = "Contact.Instagram",
+                            UpdatedAt = new DateTimeOffset(new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Value = ""
+                        },
+                        new
+                        {
+                            Key = "Contact.Twitter",
+                            UpdatedAt = new DateTimeOffset(new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Value = ""
+                        },
+                        new
+                        {
+                            Key = "Email.ConfirmationEnabled",
+                            UpdatedAt = new DateTimeOffset(new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Value = "True"
+                        },
+                        new
+                        {
+                            Key = "Notification.ShowCount",
+                            UpdatedAt = new DateTimeOffset(new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Value = "True"
+                        });
+                });
+
             modelBuilder.Entity("Domain.Entities.User", b =>
                 {
                     b.Property<Guid>("Id")
@@ -447,6 +549,82 @@ namespace Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("UserNotifications");
+                });
+
+            modelBuilder.Entity("Domain.Entities.WorkingSchedule", b =>
+                {
+                    b.Property<int>("Day")
+                        .HasColumnType("int");
+
+                    b.Property<string>("CloseTime")
+                        .IsRequired()
+                        .HasMaxLength(5)
+                        .HasColumnType("nvarchar(5)");
+
+                    b.Property<bool>("IsClosed")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("OpenTime")
+                        .IsRequired()
+                        .HasMaxLength(5)
+                        .HasColumnType("nvarchar(5)");
+
+                    b.HasKey("Day");
+
+                    b.ToTable("WorkingSchedules");
+
+                    b.HasData(
+                        new
+                        {
+                            Day = 1,
+                            CloseTime = "22:00",
+                            IsClosed = false,
+                            OpenTime = "08:00"
+                        },
+                        new
+                        {
+                            Day = 2,
+                            CloseTime = "22:00",
+                            IsClosed = false,
+                            OpenTime = "08:00"
+                        },
+                        new
+                        {
+                            Day = 3,
+                            CloseTime = "22:00",
+                            IsClosed = false,
+                            OpenTime = "08:00"
+                        },
+                        new
+                        {
+                            Day = 4,
+                            CloseTime = "22:00",
+                            IsClosed = false,
+                            OpenTime = "08:00"
+                        },
+                        new
+                        {
+                            Day = 5,
+                            CloseTime = "22:00",
+                            IsClosed = false,
+                            OpenTime = "08:00"
+                        },
+                        new
+                        {
+                            Day = 6,
+                            CloseTime = "21:00",
+                            IsClosed = false,
+                            OpenTime = "09:00"
+                        },
+                        new
+                        {
+                            Day = 0,
+                            CloseTime = "20:00",
+                            IsClosed = false,
+                            OpenTime = "09:00"
+                        });
                 });
 
             modelBuilder.Entity("Domain.Entities.Item", b =>
