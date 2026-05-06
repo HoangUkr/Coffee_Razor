@@ -21,7 +21,6 @@ namespace Infrastructure.Repositories
         public async Task<Item?> GetByIdAsync(int id)
         {
             return await _context.Items
-                        .AsSplitQuery() // Use split query for multiple collections
                         .AsNoTracking()
                         .Include(i => i.Category)
                         .Include(i => i.ItemImages)
@@ -31,7 +30,6 @@ namespace Infrastructure.Repositories
         public async Task<IEnumerable<Item>> GetAllAsync()
         {
             return await _context.Items
-                        .AsSplitQuery() // Use split query for multiple collections
                         .AsNoTracking()
                         .Include(i => i.Category)
                         .Include(i => i.ItemImages)
@@ -42,7 +40,6 @@ namespace Infrastructure.Repositories
         public async Task<IEnumerable<Item>> GetAllActiveAsync()
         {
             return await _context.Items
-                        .AsSplitQuery() // Use split query for multiple collections
                         .AsNoTracking()
                         .Include(i => i.Category)
                         .Include(i => i.ItemImages)
@@ -53,7 +50,6 @@ namespace Infrastructure.Repositories
         public async Task<IEnumerable<Item>> GetItemsByCategoryAsync(int categoryId)
         {
             return await _context.Items
-                        .AsSplitQuery() // Use split query for multiple collections
                         .AsNoTracking()
                         .Include(i => i.Category)
                         .Include(i => i.ItemImages)

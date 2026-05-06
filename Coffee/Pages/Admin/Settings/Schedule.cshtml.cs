@@ -30,7 +30,6 @@ namespace WebUI.Pages.Admin.Settings
         [BindProperty]
         public List<UpdateScheduleDayRequest> Schedule { get; set; } = new();
 
-        [BindProperty]
         public CreateHolidayRequest NewHoliday { get; set; } = new();
 
         public IReadOnlyList<HolidayResponse> Holidays { get; set; } = Array.Empty<HolidayResponse>();
@@ -43,10 +42,6 @@ namespace WebUI.Pages.Admin.Settings
         // Save weekly schedule
         public async Task<IActionResult> OnPostSaveScheduleAsync()
         {
-            // Clear validation errors from NewHoliday (not part of this submit)
-            foreach (var key in ModelState.Keys.Where(k => k.StartsWith("NewHoliday")).ToList())
-                ModelState.Remove(key);
-
             // Restore safe defaults for closed days so TimeOnly.Parse never fails
             for (int i = 0; i < Schedule.Count; i++)
             {
@@ -61,6 +56,10 @@ namespace WebUI.Pages.Admin.Settings
 
             if (!ModelState.IsValid)
             {
+                var errors = ModelState.Where(e => e.Value?.Errors.Count > 0)
+                    .Select(e => $"{e.Key}: {e.Value!.Errors[0].ErrorMessage}");
+                _logger.LogWarning("SaveSchedule ModelState invalid: {Errors}", string.Join("; ", errors));
+                ErrorMessage = "Could not save schedule. Please check the time values and try again.";
                 await LoadAsync();
                 return Page();
             }
@@ -82,11 +81,9 @@ namespace WebUI.Pages.Admin.Settings
         // Add a holiday
         public async Task<IActionResult> OnPostAddHolidayAsync()
         {
-            // Clear validation errors from Schedule (not part of this submit)
-            foreach (var key in ModelState.Keys.Where(k => k.StartsWith("Schedule")).ToList())
-                ModelState.Remove(key);
-
-            if (!ModelState.IsValid)
+            // Bind and validate only NewHoliday for this handler
+            NewHoliday = new CreateHolidayRequest();
+            if (!await TryUpdateModelAsync(NewHoliday, "NewHoliday") || !ModelState.IsValid)
             {
                 await LoadAsync();
                 return Page();

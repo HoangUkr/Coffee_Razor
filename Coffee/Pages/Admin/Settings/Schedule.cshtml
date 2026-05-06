@@ -63,8 +63,10 @@
                                             var rowId = $"row-{i}";
                                             var isClosed = Model.Schedule[i].IsClosed;
                                             <tr id="@rowId">
-                                                <input type="hidden" name="Schedule[@i].Day" value="@((int)Model.Schedule[i].Day)" />
-                                                <td class="ps-4 align-middle fw-semibold">@Model.Schedule[i].Day</td>
+                                                <td class="ps-4 align-middle fw-semibold">
+                                                    <input type="hidden" name="Schedule[@i].Day" value="@((int)Model.Schedule[i].Day)" />
+                                                    @Model.Schedule[i].Day
+                                                </td>
                                                 <td class="align-middle" style="width:160px;">
                                                     <input type="time" class="form-control form-control-sm time-input @(isClosed ? "opacity-50" : "")"
                                                            name="Schedule[@i].OpenTime"
@@ -79,13 +81,12 @@
                                                 </td>
                                                 <td class="text-center align-middle">
                                                     <div class="form-check form-switch d-flex justify-content-center mb-0">
-                                                        @* Hidden false ensures unchecked checkbox still binds as false *@
-                                                        <input type="hidden" name="Schedule[@i].IsClosed" value="false" />
                                                         <input class="form-check-input closed-toggle" type="checkbox" role="switch"
                                                                name="Schedule[@i].IsClosed"
                                                                value="true"
                                                                data-row="@rowId"
                                                                @(isClosed ? "checked" : "") />
+                                                        <input type="hidden" name="Schedule[@i].IsClosed" value="false" />
                                                     </div>
                                                 </td>
                                             </tr>

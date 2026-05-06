@@ -29,13 +29,31 @@
                         <h2 class="h4">Contact Information</h2>
                     </div>
                     <div class="col-md-12 mb-3">
-                        <p><span>Address:</span> 203 Fake St. Mountain View, San Francisco, California, USA</p>
+                        <p><span>Address:</span> @(string.IsNullOrWhiteSpace(Model.Settings.ContactAddress) ? "203 Fake St. Mountain View, San Francisco, California, USA" : Model.Settings.ContactAddress)</p>
                     </div>
                     <div class="col-md-12 mb-3">
-                        <p><span>Phone:</span> <a href="tel://1234567920">+2 392 3929 210</a></p>
+                        <p><span>Phone:</span>
+                            @if (!string.IsNullOrWhiteSpace(Model.Settings.ContactPhone))
+                            {
+                                <a href="tel:@Model.Settings.ContactPhone">@Model.Settings.ContactPhone</a>
+                            }
+                            else
+                            {
+                                <a href="tel://1234567920">+2 392 3929 210</a>
+                            }
+                        </p>
                     </div>
                     <div class="col-md-12 mb-3">
-                        <p><span>Email:</span> <a href="mailto:info@yourdomain.com">info@yourdomain.com</a></p>
+                        <p><span>Email:</span>
+                            @if (!string.IsNullOrWhiteSpace(Model.Settings.ContactEmail))
+                            {
+                                <a href="mailto:@Model.Settings.ContactEmail">@Model.Settings.ContactEmail</a>
+                            }
+                            else
+                            {
+                                <a href="mailto:info@yourdomain.com">info@yourdomain.com</a>
+                            }
+                        </p>
                     </div>
                     <div class="col-md-12 mb-3">
                         <p><span>Website:</span> <a href="#">coffeeblend.com</a></p>

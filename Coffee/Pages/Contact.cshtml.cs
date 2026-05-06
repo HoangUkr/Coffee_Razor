@@ -1,3 +1,5 @@
+using Application.DTOs.Settings;
+using Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.ComponentModel.DataAnnotations;
@@ -6,12 +8,16 @@ namespace WebUI.Pages
 {
     public class ContactModel : PageModel
     {
+        private readonly ISystemSettingService _settingService;
         private readonly ILogger<ContactModel> _logger;
 
-        public ContactModel(ILogger<ContactModel> logger)
+        public ContactModel(ISystemSettingService settingService, ILogger<ContactModel> logger)
         {
+            _settingService = settingService;
             _logger = logger;
         }
+
+        public AppSettings Settings { get; set; } = new();
 
         [BindProperty]
         [Required(ErrorMessage = "Name is required")]
@@ -31,13 +37,16 @@ namespace WebUI.Pages
         [StringLength(1000, MinimumLength = 10, ErrorMessage = "Message must be between 10 and 1000 characters")]
         public string Message { get; set; } = string.Empty;
 
-        public void OnGet()
+        public async Task OnGetAsync()
         {
+            Settings = await _settingService.GetAppSettingsAsync();
             _logger.LogInformation("Contact page visited");
         }
 
-        public IActionResult OnPost()
+        public async Task<IActionResult> OnPostAsync()
         {
+            Settings = await _settingService.GetAppSettingsAsync();
+
             if (!ModelState.IsValid)
             {
                 return Page();
@@ -46,15 +55,7 @@ namespace WebUI.Pages
             // TODO: Send email or save to database
             _logger.LogInformation("Contact form submitted by {Name} ({Email}): {Subject}", Name, Email, Subject);
 
-            // For now, just log and show success message
             TempData["SuccessMessage"] = "Thank you for contacting us! We will get back to you soon.";
-            
-            // Clear form
-            ModelState.Clear();
-            Name = string.Empty;
-            Email = string.Empty;
-            Subject = string.Empty;
-            Message = string.Empty;
 
             return RedirectToPage();
         }

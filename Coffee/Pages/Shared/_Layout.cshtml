@@ -1,4 +1,9 @@
 ﻿<!DOCTYPE html>
+@using Application.Interfaces
+@inject ISystemSettingService _settingService
+@{
+    var _appSettings = await _settingService.GetAppSettingsAsync();
+}
 <html lang="en">
 <head>
     <title>@ViewData["Title"] - Coffee Shop</title>
@@ -108,9 +113,18 @@
                         <h2 class="ftco-heading-2">About Us</h2>
                         <p>Far far away, behind the word mountains, far from the countries Vokalia and Consonantia, there live the blind texts.</p>
                         <ul class="ftco-footer-social list-unstyled float-md-left float-lft mt-5">
-                            <li class="ftco-animate"><a href="#"><span class="icon-twitter"></span></a></li>
-                            <li class="ftco-animate"><a href="#"><span class="icon-facebook"></span></a></li>
-                            <li class="ftco-animate"><a href="#"><span class="icon-instagram"></span></a></li>
+                            @if (!string.IsNullOrWhiteSpace(_appSettings.ContactTwitter))
+                            {
+                                <li class="ftco-animate"><a href="@_appSettings.ContactTwitter" target="_blank" rel="noopener"><span class="icon-twitter"></span></a></li>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(_appSettings.ContactFacebook))
+                            {
+                                <li class="ftco-animate"><a href="@_appSettings.ContactFacebook" target="_blank" rel="noopener"><span class="icon-facebook"></span></a></li>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(_appSettings.ContactInstagram))
+                            {
+                                <li class="ftco-animate"><a href="@_appSettings.ContactInstagram" target="_blank" rel="noopener"><span class="icon-instagram"></span></a></li>
+                            }
                         </ul>
                     </div>
                 </div>
@@ -146,9 +160,30 @@
                         <h2 class="ftco-heading-2">Have a Questions?</h2>
                         <div class="block-23 mb-3">
                             <ul>
-                                <li><span class="icon icon-map-marker"></span><span class="text">203 Fake St. Mountain View, San Francisco, California, USA</span></li>
-                                <li><a href="#"><span class="icon icon-phone"></span><span class="text">+2 392 3929 210</span></a></li>
-                                <li><a href="#"><span class="icon icon-envelope"></span><span class="text">info@yourdomain.com</span></a></li>
+                                <li>
+                                    <span class="icon icon-map-marker"></span>
+                                    <span class="text">@(string.IsNullOrWhiteSpace(_appSettings.ContactAddress) ? "203 Fake St. Mountain View, San Francisco, California, USA" : _appSettings.ContactAddress)</span>
+                                </li>
+                                <li>
+                                    @if (!string.IsNullOrWhiteSpace(_appSettings.ContactPhone))
+                                    {
+                                        <a href="tel:@_appSettings.ContactPhone"><span class="icon icon-phone"></span><span class="text">@_appSettings.ContactPhone</span></a>
+                                    }
+                                    else
+                                    {
+                                        <a href="#"><span class="icon icon-phone"></span><span class="text">+2 392 3929 210</span></a>
+                                    }
+                                </li>
+                                <li>
+                                    @if (!string.IsNullOrWhiteSpace(_appSettings.ContactEmail))
+                                    {
+                                        <a href="mailto:@_appSettings.ContactEmail"><span class="icon icon-envelope"></span><span class="text">@_appSettings.ContactEmail</span></a>
+                                    }
+                                    else
+                                    {
+                                        <a href="#"><span class="icon icon-envelope"></span><span class="text">info@yourdomain.com</span></a>
+                                    }
+                                </li>
                             </ul>
                         </div>
                     </div>

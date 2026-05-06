@@ -31,6 +31,8 @@ namespace WebUI.Pages.Admin.Settings
             Input = new UpdateSettingsRequest
             {
                 ContactEmail             = settings.ContactEmail,
+                ContactPhone             = settings.ContactPhone,
+                ContactAddress           = settings.ContactAddress,
                 ContactFacebook          = settings.ContactFacebook,
                 ContactInstagram         = settings.ContactInstagram,
                 ContactTwitter           = settings.ContactTwitter,

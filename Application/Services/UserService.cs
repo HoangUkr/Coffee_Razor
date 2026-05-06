@@ -30,21 +30,6 @@ namespace Application.Services
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
         }
 
-        public async Task<UserResponse> RegisterAsync(RegisterRequest request)
-        {
-            if (request == null) throw new ArgumentNullException(nameof(request));
-
-            if(await _userRepository.ExistsAsync(request.Username))
-            {
-                throw new InvalidOperationException($"Username {request.Username} already exists.");
-            }
-
-            var (hash, salt) = _passwordHasher.HashPassword(request.Password);
-            var user = new User(request.Username, hash, salt);
-            await _userRepository.CreateAsync(user);
-            
-            return _mapper.Map<UserResponse>(user);
-        }
         public async Task<UserResponse?> GetByIdAsync(Guid userId)
         {
             var user = await _userRepository.GetByIdAsync(userId);

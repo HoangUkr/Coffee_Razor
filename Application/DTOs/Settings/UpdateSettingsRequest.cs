@@ -8,6 +8,13 @@ namespace Application.DTOs.Settings
         [MaxLength(200)]
         public string? ContactEmail { get; set; }
 
+        [Phone]
+        [MaxLength(50)]
+        public string? ContactPhone { get; set; }
+
+        [MaxLength(300)]
+        public string? ContactAddress { get; set; }
+
         [MaxLength(500)]
         public string? ContactFacebook { get; set; }
 

@@ -41,6 +41,8 @@ namespace Application.Services
             var settings = new AppSettings
             {
                 ContactEmail      = Get(map, SettingKeys.ContactEmail,      string.Empty),
+                ContactPhone      = Get(map, SettingKeys.ContactPhone,      string.Empty),
+                ContactAddress    = Get(map, SettingKeys.ContactAddress,    string.Empty),
                 ContactFacebook   = Get(map, SettingKeys.ContactFacebook,   string.Empty),
                 ContactInstagram  = Get(map, SettingKeys.ContactInstagram,  string.Empty),
                 ContactTwitter    = Get(map, SettingKeys.ContactTwitter,    string.Empty),
@@ -60,6 +62,8 @@ namespace Application.Services
             var updated = new[]
             {
                 new SystemSetting(SettingKeys.ContactEmail,              request.ContactEmail     ?? string.Empty),
+                new SystemSetting(SettingKeys.ContactPhone,              request.ContactPhone     ?? string.Empty),
+                new SystemSetting(SettingKeys.ContactAddress,            request.ContactAddress   ?? string.Empty),
                 new SystemSetting(SettingKeys.ContactFacebook,           request.ContactFacebook  ?? string.Empty),
                 new SystemSetting(SettingKeys.ContactInstagram,          request.ContactInstagram ?? string.Empty),
                 new SystemSetting(SettingKeys.ContactTwitter,            request.ContactTwitter   ?? string.Empty),

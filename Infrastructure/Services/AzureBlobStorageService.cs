@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using Application.Interfaces;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
@@ -14,6 +15,11 @@ namespace Infrastructure.Services
         private readonly string _containerName;
         private readonly ILogger<AzureBlobStorageService> _logger;
         private readonly bool _useSharedAccessSignature;
+
+        // SAS URLs are valid for 1 year; cache them for 23 h to avoid per-request regeneration
+        // while still rotating well before expiry.
+        private static readonly TimeSpan SasCacheDuration = TimeSpan.FromHours(23);
+        private readonly ConcurrentDictionary<string, (string Url, DateTimeOffset ValidUntil)> _sasCache = new();
 
         public AzureBlobStorageService(
             IConfiguration configuration,
@@ -126,6 +132,9 @@ namespace Infrastructure.Services
                 var blobClient = _containerClient.GetBlobClient(fileName);
                 var result = await blobClient.DeleteIfExistsAsync();
 
+                // Evict cached SAS URL so a deleted blob is never served from cache
+                _sasCache.TryRemove(fileName, out _);
+
                 if (result.Value)
                 {
                     _logger.LogInformation("Image deleted successfully: {FileName}", fileName);
@@ -151,11 +160,22 @@ namespace Infrastructure.Services
                 return string.Empty;
             }
 
-            var blobClient = _containerClient.GetBlobClient(fileName);
+            if (!_useSharedAccessSignature)
+            {
+                return _containerClient.GetBlobClient(fileName).Uri.ToString();
+            }
 
-            return _useSharedAccessSignature 
-                ? GenerateSasUrl(blobClient)
-                : blobClient.Uri.ToString();
+            var now = DateTimeOffset.UtcNow;
+
+            if (_sasCache.TryGetValue(fileName, out var cached) && cached.ValidUntil > now)
+            {
+                return cached.Url;
+            }
+
+            var blobClient = _containerClient.GetBlobClient(fileName);
+            var url = GenerateSasUrl(blobClient);
+            _sasCache[fileName] = (url, now.Add(SasCacheDuration));
+            return url;
         }
 
         /// <summary>

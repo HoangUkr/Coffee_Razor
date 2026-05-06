@@ -73,10 +73,6 @@ builder.Services.AddAutoMapper(config =>
     config.AddProfile<CategoryMappingProfile>();
     config.AddProfile<ItemImageMappingProfile>();
     config.AddProfile<Application.MappingProfiles.ReservationMappingProfile>();
-
-    // Register ImageUrlResolver for dependency injection in AutoMapper
-    config.ConstructServicesUsing(type => 
-        builder.Services.BuildServiceProvider().GetService(type)!);
 });
 
 // Register repository
@@ -99,7 +95,7 @@ builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IItemService, ItemService>();
 builder.Services.AddScoped<IItemImageService, ItemImageService>();
 builder.Services.AddScoped<IReservationService, ReservationService>();
-builder.Services.AddScoped<IStorageService, AzureBlobStorageService>();
+builder.Services.AddSingleton<IStorageService, AzureBlobStorageService>();
 builder.Services.AddScoped<ICacheService, RedisCacheService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<ISystemSettingService, SystemSettingService>();

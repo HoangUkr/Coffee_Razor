@@ -58,6 +58,23 @@
                                     <span asp-validation-for="Input.ContactEmail" class="text-danger small"></span>
                                 </div>
                                 <div class="col-12">
+                                    <label class="form-label">Phone Number</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="ti ti-phone"></i></span>
+                                        <input type="tel" class="form-control" asp-for="Input.ContactPhone"
+                                               placeholder="+1 (555) 000-0000" />
+                                    </div>
+                                    <span asp-validation-for="Input.ContactPhone" class="text-danger small"></span>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label">Address</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="ti ti-map-pin"></i></span>
+                                        <input type="text" class="form-control" asp-for="Input.ContactAddress"
+                                               placeholder="123 Main St, City, Country" />
+                                    </div>
+                                </div>
+                                <div class="col-12">
                                     <label class="form-label">Facebook URL</label>
                                     <div class="input-group">
                                         <span class="input-group-text"><i class="ti ti-brand-facebook"></i></span>

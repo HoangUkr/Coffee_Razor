@@ -10,7 +10,6 @@ namespace Application.Interfaces
 {
     public interface IUserService
     {
-        Task<UserResponse> RegisterAsync(RegisterRequest request);
         Task<LoginResponse> LoginAsync(LoginRequest request);
         Task<UserResponse?> GetByIdAsync(Guid id);
         Task<bool> IsUsernameAvailableAsync(string username);
