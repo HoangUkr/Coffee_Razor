@@ -133,7 +133,7 @@
     </div>
     <ul class="nav flex-column">
       <li class="px-4 py-2"><small class="nav-text">Main</small></li>
-      <li><a class="nav-link active" asp-page="/Admin/Inventory"><i class="ti ti-home"></i><span
+      <li><a class="nav-link @(Context.Request.Path.StartsWithSegments("/Admin/Index") || Context.Request.Path == "/Admin" ? "active" : "")" asp-page="/Admin/Index"><i class="ti ti-home"></i><span
             class="nav-text">Dashboard</span></a></li>
       <li><a class="nav-link" asp-page="/Admin/Inventory"><i class="ti ti-box-seam"></i><span
             class="nav-text">Inventory</span></a></li>
@@ -190,9 +190,7 @@
     </ul>
 
   </aside>
-  <main>
-        @RenderBody()
-  </main>
+  @RenderBody()
 
   <!-- jQuery (required for validation) -->
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>

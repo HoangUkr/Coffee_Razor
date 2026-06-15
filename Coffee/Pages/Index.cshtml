@@ -34,7 +34,8 @@
             <div class="row slider-text justify-content-center align-items-center">
                 <div class="col-md-8 col-sm-12 text-center ftco-animate">
                     <span class="subheading">Welcome</span>
-                    <h1 class="mb-4">Amazing Taste &amp; Beautiful Place</h1>
+                    @* <h1 class="mb-4">Amazing Taste &amp; Beautiful Place</h1> *@
+                    <h1 class="mb-4">Super Chicken Benjamin</h1>
                     <p class="mb-4 mb-md-5">A small river named Duden flows by their place and supplies it with the necessary regelialia.</p>
                     <p>
                         <a asp-page="/Menu" class="btn btn-primary p-3 px-xl-4 py-xl-3">Order Now</a>
@@ -187,6 +188,12 @@
                             <div class="input-wrap">
                                 <div class="icon"><span class="ion-ios-clock"></span></div>
                                 <input type="text" name="time" class="form-control appointment_time" placeholder="Time *" required>
+                            </div>
+                        </div>
+                        <div class="form-group ml-md-4">
+                            <div class="input-wrap">
+                                <div class="icon"><span class="ion-ios-people"></span></div>
+                                <input type="number" name="guests" class="form-control" placeholder="Guests *" min="1" max="20" required>
                             </div>
                         </div>
                     </div>

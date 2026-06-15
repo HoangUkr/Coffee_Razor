@@ -9,18 +9,18 @@ using Infrastructure.Repositories;
 using Infrastructure.Services;
 using Infrastructure.Settings;
 
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using WebUI.Hubs;
 using WebUI.Services;
-
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 const string authTokenCookieName = "AuthToken";
 var redisEnabled = builder.Configuration.GetValue<bool>("Redis:Enabled");
 var redisConfiguration = builder.Configuration["Redis:Configuration"];
@@ -32,12 +32,12 @@ builder.Services.AddControllersWithViews()
     {
         options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
     });
-builder.Services.AddSignalR();
+
 builder.Services.AddRazorPages(options =>
 {
     options.Conventions.AuthorizeFolder("/Admin");
     options.Conventions.AllowAnonymousToPage("/Admin/Login");
-    options.Conventions.AllowAnonymousToPage("/Admin/Index");
+    //options.Conventions.AllowAnonymousToPage("/Admin/Index");
 });
 
 // Add distributed cache / session support
@@ -62,10 +62,18 @@ builder.Services.AddSession(options =>
 });
 
 // Add DbContext with SQL Server provider
-builder.Services.AddDbContext<CoffeeDbContext>(options => options.UseSqlServer(connectionString, b => b.MigrationsAssembly("Infrastructure")));
+builder.Services.AddDbContext<CoffeeDbContext>(options =>
+    options.UseSqlServer(connectionString, b =>
+    {
+        b.MigrationsAssembly("Infrastructure");
+        b.EnableRetryOnFailure(
+            maxRetryCount: 5,
+            maxRetryDelay: TimeSpan.FromSeconds(10),
+            errorNumbersToAdd: null);
+    }));
 
-// Add auto mapper
-builder.Services.AddAutoMapper(config => 
+// Add AutoMapper
+builder.Services.AddAutoMapper(config =>
 {
     config.AddProfile<UserProfile>();
     config.AddProfile<OrderMappingProfile>();
@@ -75,7 +83,7 @@ builder.Services.AddAutoMapper(config =>
     config.AddProfile<Application.MappingProfiles.ReservationMappingProfile>();
 });
 
-// Register repository
+// Register repositories
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IItemRepository, ItemRepository>();
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
@@ -104,7 +112,7 @@ builder.Services.AddScoped<IHolidayService, HolidayService>();
 builder.Services.AddScoped<ITokenBlacklistService, TokenBlacklistService>();
 builder.Services.AddSingleton<IAdminNotificationPublisher, SignalRAdminNotificationPublisher>();
 
-// Register infrastructure services with interfaces
+// Register infrastructure services
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection(EmailSettings.SectionName));
@@ -140,9 +148,7 @@ builder.Services.AddAuthentication(options =>
         OnMessageReceived = context =>
         {
             if (string.IsNullOrEmpty(context.Token))
-            {
                 context.Token = context.Request.Cookies[authTokenCookieName];
-            }
             return Task.CompletedTask;
         },
         OnTokenValidated = async context =>
@@ -154,45 +160,33 @@ builder.Services.AddAuthentication(options =>
                 context.Fail("Token has been revoked.");
                 context.HttpContext.Response.Cookies.Delete(authTokenCookieName, new CookieOptions
                 {
-                    Path = "/",
-                    Secure = true,
-                    SameSite = SameSiteMode.Strict,
-                    HttpOnly = true
+                    Path = "/", Secure = true, SameSite = SameSiteMode.Strict, HttpOnly = true
                 });
             }
         },
         OnAuthenticationFailed = async context =>
         {
             var token = context.Request.Cookies[authTokenCookieName];
-
             if (!string.IsNullOrWhiteSpace(token) && context.Exception is SecurityTokenExpiredException)
             {
                 var blacklistService = context.HttpContext.RequestServices.GetRequiredService<ITokenBlacklistService>();
                 await blacklistService.BlacklistTokenAsync(token);
             }
-
             context.HttpContext.Response.Cookies.Delete(authTokenCookieName, new CookieOptions
             {
-                Path = "/",
-                Secure = true,
-                SameSite = SameSiteMode.Strict,
-                HttpOnly = true
+                Path = "/", Secure = true, SameSite = SameSiteMode.Strict, HttpOnly = true
             });
         },
         OnChallenge = context =>
         {
             if (context.Request.Path.StartsWithSegments("/api", StringComparison.OrdinalIgnoreCase))
-            {
                 return Task.CompletedTask;
-            }
 
             context.HandleResponse();
-
-            var requestPath = context.Request.Path.HasValue ? context.Request.Path.Value! : "/Admin/Index";
+            var requestPath = context.Request.Path.HasValue ? context.Request.Path.Value! : "/Admin/Login";
             var requestQuery = context.Request.QueryString.HasValue ? context.Request.QueryString.Value! : string.Empty;
             var returnUrl = Uri.EscapeDataString($"{requestPath}{requestQuery}");
-
-            context.Response.Redirect($"/Admin/Index?returnUrl={returnUrl}");
+            context.Response.Redirect($"/Admin/Login?returnUrl={returnUrl}");
             return Task.CompletedTask;
         }
     };
@@ -200,30 +194,44 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 
+// SignalR: use Azure SignalR Service if connection string is configured, otherwise use local
+var azureSignalRConnectionString = builder.Configuration["Azure:SignalR:ConnectionString"];
+var signalRBuilder = builder.Services.AddSignalR();
+if (!string.IsNullOrWhiteSpace(azureSignalRConnectionString))
+{
+    signalRBuilder.AddAzureSignalR(azureSignalRConnectionString);
+}
+
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Bootstrap: seed first admin user if none exists
+using (var scope = app.Services.CreateScope())
+{
+    var userRepo = scope.ServiceProvider.GetRequiredService<IUserRepository>();
+    var hasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
+    const string seedUsername = "admin";
+    if (!await userRepo.ExistsAsync(seedUsername))
+    {
+        var (hash, salt) = hasher.HashPassword("Admin@1234");
+        var adminUser = new Domain.Entities.User(seedUsername, hash, salt, "Admin");
+        await userRepo.CreateAsync(adminUser);
+    }
+}
+
 if (!app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+    app.UseExceptionHandler("/Error");
     app.UseHsts();
 }
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-
-app.UseSession(); // Enable session middleware
-
+app.UseSession();
 app.UseRouting();
-
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Map Razor Pages first (for main UI)
 app.MapRazorPages();
-
-// Map API controllers (for /api/* endpoints)
 app.MapControllers();
 app.MapHub<AdminNotificationHub>("/hubs/admin-notifications");
 

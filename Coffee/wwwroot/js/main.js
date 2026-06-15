@@ -1,4 +1,4 @@
- AOS.init({
+AOS.init({
  	duration: 800,
  	easing: 'slide'
  });
@@ -7,20 +7,23 @@
 
 	"use strict";
 
-	$(window).stellar({
-    responsive: true,
-    parallaxBackgrounds: true,
-    parallaxElements: true,
-    horizontalScrolling: false,
-    hideDistantElements: false,
-    scrollProperty: 'scroll',
-    horizontalOffset: 0,
-	  verticalOffset: 0
-  });
+	var isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
-  // Scrollax
-  $.Scrollax();
+	if (!isMobile) {
+	    $(window).stellar({
+	        responsive: true,
+	        parallaxBackgrounds: true,
+	        parallaxElements: true,
+	        horizontalScrolling: false,
+	        hideDistantElements: false,
+	        scrollProperty: 'scroll',
+	        horizontalOffset: 0,
+	        verticalOffset: 0
+	    });
 
+	    // Scrollax
+	    $.Scrollax();
+	}
 
 	var fullHeight = function() {
 
@@ -47,30 +50,36 @@
 
 	var carousel = function() {
 		$('.home-slider').owlCarousel({
-	    loop:true,
-	    autoplay: true,
-	    margin:0,
-	    animateOut: 'fadeOut',
-	    animateIn: 'fadeIn',
-	    nav:false,
-	    autoplayHoverPause: false,
-	    items: 1,
-	    navText : ["<span class='ion-md-arrow-back'></span>","<span class='ion-chevron-right'></span>"],
-	    responsive:{
-	      0:{
-	        items:1,
-	        nav:false
-	      },
-	      600:{
-	        items:1,
-	        nav:false
-	      },
-	      1000:{
-	        items:1,
-	        nav:false
-	      }
-	    }
+		loop:true,
+		autoplay: true,
+		margin:0,
+		animateOut: 'fadeOut',
+		animateIn: 'fadeIn',
+		nav:false,
+		autoplayHoverPause: false,
+		items: 1,
+		touchDrag: true,
+		mouseDrag: true,
+		pullDrag: false,
+		freeDrag: false,
+		navText : ["<span class='ion-md-arrow-back'></span>","<span class='ion-chevron-right'></span>"],
+		responsive:{
+		  0:{
+			items:1,
+			nav:false
+		  },
+		  600:{
+			items:1,
+			nav:false
+		  },
+		  1000:{
+			items:1,
+			nav:false
+		  }
+		}
 		});
+
+
 		$('.carousel-work').owlCarousel({
 			autoplay: true,
 			center: true,
@@ -79,6 +88,10 @@
 			margin: 30,
 			stagePadding:0,
 			nav: true,
+			touchDrag: true,
+			mouseDrag: true,
+			pullDrag: false,
+			freeDrag: false,
 			navText: ['<span class="ion-ios-arrow-back">', '<span class="ion-ios-arrow-forward">'],
 			responsive:{
 				0:{

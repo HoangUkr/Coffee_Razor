@@ -45,3 +45,19 @@
     right: 0;
     left: auto;
 }
+
+/* Fix: Owl Carousel blocks vertical touch scrolling on mobile.
+   The carousel CSS sets touch-action:none on .owl-drag .owl-item and
+   touch-action:manipulation on .owl-stage, both of which prevent the
+   browser from scrolling the page. Override both to pan-y so that
+   vertical swipes scroll the page while horizontal swipes still slide
+   the carousel. */
+.owl-carousel .owl-stage {
+    -ms-touch-action: pan-y;
+    touch-action: pan-y;
+}
+
+.owl-carousel.owl-drag .owl-item {
+    -ms-touch-action: pan-y;
+    touch-action: pan-y;
+}

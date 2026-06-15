@@ -4,6 +4,11 @@
     ViewData["Title"] = "Menu";
 }
 
+<!-- Hidden form for antiforgery token -->
+<form id="antiforgeryForm" style="display:none;">
+    @Html.AntiForgeryToken()
+</form>
+
 <!-- HERO SECTION -->
 <section class="home-slider owl-carousel">
     <div class="slider-item" style="background-image: url(@Url.Content("~/images/bg_3.jpg"));" data-stellar-background-ratio="0.5">
@@ -107,21 +112,55 @@
 
 @section Scripts {
     <script>
-        function addToCart(itemId) {
-            // TODO: Implement add to cart functionality
-            console.log('Adding item ' + itemId + ' to cart');
-            
-            // You can make an AJAX call to add to cart
-            // fetch('/api/cart/add', {
-            //     method: 'POST',
-            //     headers: { 'Content-Type': 'application/json' },
-            //     body: JSON.stringify({ itemId: itemId, quantity: 1 })
-            // })
-            // .then(response => response.json())
-            // .then(data => {
-            //     // Update cart count
-            //     document.getElementById('cart-count').textContent = data.itemCount;
-            // });
+        async function addToCart(itemId) {
+            try {
+                const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+
+                const formData = new FormData();
+                formData.append('itemId', itemId);
+                formData.append('quantity', 1);
+                if (token) {
+                    formData.append('__RequestVerificationToken', token);
+                }
+
+                const response = await fetch('/Cart?handler=AddToCart', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to add item to cart');
+                }
+
+                const result = await response.json();
+
+                if (result.success) {
+                    const cartCountElements = document.querySelectorAll('.cart-count, #cart-count');
+                    cartCountElements.forEach(element => {
+                        element.textContent = result.itemCount;
+                    });
+                    showToast('Item added to cart!', 'success');
+                } else {
+                    showToast(result.message || 'Failed to add item to cart', 'error');
+                }
+            } catch (error) {
+                console.error('Error adding item to cart:', error);
+                showToast('An error occurred. Please try again.', 'error');
+            }
+        }
+
+        function showToast(message, type) {
+            const toast = document.createElement('div');
+            toast.className = `alert alert-${type === 'success' ? 'success' : 'danger'} position-fixed`;
+            toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 250px;';
+            toast.innerHTML = `
+                <i class="icon-${type === 'success' ? 'check' : 'alert-circle'}"></i> ${message}
+            `;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
         }
     </script>
 }

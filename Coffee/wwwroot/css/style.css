@@ -7699,7 +7699,10 @@ h1, h2, h3, h4, h5,
     width: 60px;
     text-align: center;
     display: inline-block; }
-
+/* Allow vertical scroll through Owl Carousel on touch devices */
+.owl-carousel .owl-stage-outer {
+    touch-action: pan-y !important;
+}
 .bg-light {
   background: #fafafa !important; }
 

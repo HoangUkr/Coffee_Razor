@@ -179,7 +179,7 @@ namespace WebUI.Pages
                     PhoneNumber = phone,
                     ReservationDate = reservationDate,
                     ReservationTime = normalizedTime,
-                    NumberOfGuests = 2, // Default to 2, or parse from a guests field if added
+                    NumberOfGuests = int.TryParse(Request.Form["guests"], out var guests) ? guests : 2,
                     SpecialRequests = message
                 };
 

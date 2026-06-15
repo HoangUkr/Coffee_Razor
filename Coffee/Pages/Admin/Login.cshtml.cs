@@ -29,7 +29,7 @@ namespace WebUI.Pages.Admin
         {
             if (User.Identity?.IsAuthenticated == true)
             {
-                return LocalRedirect(Url.Content("~/Admin/Inventory"));
+                return LocalRedirect(Url.Content("~/Admin/Index"));
             }
 
             ReturnUrl = NormalizeReturnUrl(returnUrl);
@@ -67,7 +67,7 @@ namespace WebUI.Pages.Admin
 
                 _logger.LogInformation("User {Username} logged in successfully", result.User.Username);
 
-                return LocalRedirect(ReturnUrl ?? Url.Content("~/Admin/Inventory"));
+                return LocalRedirect(ReturnUrl ?? Url.Content("~/Admin/Index"));
             }
             catch (UnauthorizedAccessException ex)
             {
@@ -103,7 +103,7 @@ namespace WebUI.Pages.Admin
                 return LocalRedirect(returnUrl);
             }
 
-            return RedirectToPage("/Admin/Index");
+            return RedirectToPage("/Admin/Login");
         }
 
         private string NormalizeReturnUrl(string? returnUrl)
